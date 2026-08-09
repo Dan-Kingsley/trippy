@@ -8,6 +8,7 @@ class TripEntriesController < ApplicationController
   def show
     @comments = @entry.comments.where(parent_id: nil).includes(:user, replies: :user).order(:created_at)
     @editable = Current.user&.can_edit?(@trip) || false
+    @trip_member = Current.user && @trip.editors.exists?(id: Current.user.id)
     record_view!
   end
 

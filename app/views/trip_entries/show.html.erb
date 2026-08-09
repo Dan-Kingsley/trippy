@@ -53,7 +53,9 @@
         <%= avatar_tag user, size: 56, css_class: "w-7 h-7 text-xs ring-2 ring-stone-50 dark:ring-stone-900" %>
       <% end %>
     </div>
-    <p class="text-xs text-stone-500 dark:text-stone-400"><%= pluralize(@entry.views_count, "view") %></p>
+    <% if @trip_member %>
+      <p class="text-xs text-stone-500 dark:text-stone-400"><%= pluralize(@entry.views_count, "view") %></p>
+    <% end %>
   </div>
   <% if @entry.description.present? %>
     <div class="prose-trip mt-3 text-stone-700 dark:text-stone-200"><%= render_markdown(@entry.description) %></div>
