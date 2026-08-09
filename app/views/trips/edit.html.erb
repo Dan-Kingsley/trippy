@@ -1,0 +1,44 @@
+<% content_for :title, "Edit #{@trip.title} - Trippy" %>
+
+<h1 class="font-bold text-3xl mb-6 text-stone-800 dark:text-stone-100">Edit trip</h1>
+
+<%= render "form", trip: @trip, url: trip_path(@trip) %>
+
+<% if Current.user.admin? || @trip.owner_id == Current.user.id %>
+  <section class="mt-10 max-w-lg">
+    <h2 class="font-semibold text-lg mb-3 text-stone-800 dark:text-stone-100">Collaborators</h2>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mb-3">Owner: <%= @trip.owner.username %></p>
+
+    <ul class="space-y-2 mb-4">
+      <% @trip.collaborators.each do |collaborator| %>
+        <li class="flex items-center justify-between rounded-md border border-stone-200 dark:border-stone-800 px-3 py-2">
+          <span class="text-sm text-stone-700 dark:text-stone-200"><%= collaborator.username %></span>
+          <%= button_to "Remove", trip_collaborator_path(@trip, collaborator), method: :delete,
+                class: "text-xs text-red-600 dark:text-red-400 hover:underline cursor-pointer" %>
+        </li>
+      <% end %>
+    </ul>
+
+    <%= form_with url: trip_collaborators_path(@trip), method: :post, class: "flex gap-2" do |form| %>
+      <%= form.text_field :username, placeholder: "adventurer's username",
+            class: "flex-1 min-w-0 rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2" %>
+      <%= form.submit "Add", class: "shrink-0 rounded-md px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium cursor-pointer" %>
+    <% end %>
+    <p class="text-xs text-stone-400 mt-2">Only existing adventurer accounts can be added.</p>
+  </section>
+
+  <% unless @trip.public? %>
+    <section class="mt-10 max-w-lg">
+      <h2 class="font-semibold text-lg mb-3 text-stone-800 dark:text-stone-100">Private access</h2>
+      <p class="text-sm text-stone-500 dark:text-stone-400 mb-2">Share this link so people can view the trip without logging in:</p>
+      <code class="block break-all bg-stone-100 dark:bg-stone-800 rounded px-3 py-2 text-sm"><%= trip_url(@trip, code: @trip.secret_code) %></code>
+    </section>
+  <% end %>
+
+  <section class="mt-10 max-w-lg">
+    <h2 class="font-semibold text-lg mb-3 text-red-700 dark:text-red-400">Danger zone</h2>
+    <%= button_to "Delete trip", trip_path(@trip), method: :delete,
+          form: { data: { turbo_confirm: "Delete \"#{@trip.title}\" and all its entries, photos, and comments? This can't be undone." } },
+          class: "rounded-md px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium cursor-pointer" %>
+  </section>
+<% end %>

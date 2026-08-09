@@ -1,0 +1,47 @@
+<% content_for :title, "Admin - Users - Trippy" %>
+
+<h1 class="font-bold text-3xl mb-6 text-stone-800 dark:text-stone-100">Users</h1>
+
+<%= form_with url: grant_adventurer_admin_users_path, method: :post, class: "mb-8 flex flex-wrap items-end gap-3" do |form| %>
+  <div>
+    <%= form.label :username, "Grant adventurer access by username", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+    <%= form.text_field :username, required: true, placeholder: "username",
+          class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2" %>
+  </div>
+  <%= form.submit "Grant", class: "rounded-md px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
+<% end %>
+
+<div class="overflow-x-auto rounded-lg border border-stone-200 dark:border-stone-800">
+  <table class="w-full text-sm">
+    <thead class="bg-stone-100 dark:bg-stone-800 text-left text-stone-500 dark:text-stone-400">
+      <tr>
+        <th class="px-4 py-2">Username</th>
+        <th class="px-4 py-2">Joined</th>
+        <th class="px-4 py-2">Adventurer</th>
+        <th class="px-4 py-2">Admin</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-stone-200 dark:divide-stone-800">
+      <% @users.each do |user| %>
+        <tr>
+          <td class="px-4 py-2 font-medium text-stone-800 dark:text-stone-100"><%= user.username %></td>
+          <td class="px-4 py-2 text-stone-500 dark:text-stone-400"><%= user.created_at.to_date.iso8601 %></td>
+          <td class="px-4 py-2">
+            <%= button_to user.adventurer? ? "Revoke" : "Grant", admin_user_path(user), method: :patch,
+                  params: { adventurer: !user.adventurer? },
+                  class: "rounded px-2 py-1 text-xs font-medium cursor-pointer #{user.adventurer? ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300'}" %>
+          </td>
+          <td class="px-4 py-2">
+            <% if user == Current.user %>
+              <span class="text-xs text-stone-400">you</span>
+            <% else %>
+              <%= button_to user.admin? ? "Revoke" : "Grant", admin_user_path(user), method: :patch,
+                    params: { admin: !user.admin? },
+                    class: "rounded px-2 py-1 text-xs font-medium cursor-pointer #{user.admin? ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300'}" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

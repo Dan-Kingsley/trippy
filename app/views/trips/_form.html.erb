@@ -1,0 +1,30 @@
+<% if trip.errors.any? %>
+  <div class="mb-4 rounded-lg bg-red-50 dark:bg-red-900/40 px-4 py-2.5 text-red-600 dark:text-red-300 text-sm">
+    <ul class="list-disc list-inside">
+      <% trip.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%= form_with model: trip, url: url, class: "space-y-5 max-w-lg" do |form| %>
+  <div>
+    <%= form.label :title, class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+    <%= form.text_field :title, required: true, autofocus: true,
+          class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <%= form.check_box :public, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700" %>
+    <%= form.label :public, "Public (listed on the homepage for everyone)", class: "text-sm text-stone-600 dark:text-stone-300" %>
+  </div>
+
+  <div>
+    <%= form.label :cover_photo, "Cover photo (optional)", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+    <%= form.file_field :cover_photo, accept: "image/*", class: "block w-full text-sm" %>
+    <p class="text-xs text-stone-400 mt-1">If left blank, the first entry's first photo is used as the trip's thumbnail.</p>
+  </div>
+
+  <%= form.submit (trip.persisted? ? "Save changes" : "Create trip"), class: "rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
+<% end %>

@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Manual dark-mode toggle: apply dark: variants when an ancestor has the .dark class */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-stone-50 dark:bg-stone-900 text-stone-800 dark:text-stone-100 transition-colors duration-200;
+  }
+}
+
+.prose-trip :is(h1, h2, h3) {
+  @apply font-semibold mt-4 mb-2;
+}
+.prose-trip p {
+  @apply mb-3 leading-relaxed;
+}
+.prose-trip a {
+  @apply text-amber-700 dark:text-amber-400 underline;
+}
+.prose-trip ul, .prose-trip ol {
+  @apply mb-3 ml-5 list-outside;
+}
+.prose-trip ul {
+  @apply list-disc;
+}
+.prose-trip ol {
+  @apply list-decimal;
+}
+.prose-trip blockquote {
+  @apply border-l-4 border-amber-300 dark:border-amber-700 pl-4 italic text-stone-600 dark:text-stone-300;
+}
+.prose-trip code {
+  @apply bg-stone-100 dark:bg-stone-800 rounded px-1 py-0.5 text-sm;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.trip-map-marker {
+  background: transparent;
+  border: none;
+}
+

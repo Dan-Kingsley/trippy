@@ -1,0 +1,49 @@
+import { Controller } from "@hotwired/stimulus"
+import L from "leaflet"
+
+// Renders a Leaflet/OpenStreetMap map with one circular photo marker per
+// located trip entry, connected in chronological order by a translucent line.
+export default class extends Controller {
+  static values = { entries: Array }
+
+  connect() {
+    const located = this.entriesValue.filter((e) => e.lat != null && e.lng != null)
+
+    this.map = L.map(this.element, { scrollWheelZoom: false })
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(this.map)
+
+    if (located.length === 0) {
+      this.map.setView([20, 0], 2)
+      return
+    }
+
+    const latLngs = located.map((e) => [ e.lat, e.lng ])
+
+    if (located.length > 1) {
+      L.polyline(latLngs, { color: "#b45309", weight: 3, opacity: 0.75 }).addTo(this.map)
+    }
+
+    located.forEach((entry) => {
+      const icon = L.divIcon({
+        className: "trip-map-marker",
+        html: `<a href="${entry.url}" class="block w-12 h-12 rounded-full border-2 border-white dark:border-stone-900 shadow-md overflow-hidden bg-stone-300 bg-cover bg-center" style="background-image:url('${entry.thumbnail_url || ""}')"></a>`,
+        iconSize: [ 48, 48 ],
+        iconAnchor: [ 24, 24 ]
+      })
+      L.marker([ entry.lat, entry.lng ], { icon, title: entry.title }).addTo(this.map)
+    })
+
+    if (located.length === 1) {
+      this.map.setView(latLngs[0], 13)
+    } else {
+      this.map.fitBounds(latLngs, { padding: [ 40, 40 ] })
+    }
+  }
+
+  disconnect() {
+    this.map?.remove()
+  }
+}

@@ -1,0 +1,26 @@
+<% content_for :title, "Sign in - Trippy" %>
+
+<div class="mx-auto max-w-sm w-full py-8">
+  <h1 class="font-bold text-3xl mb-6 text-stone-800 dark:text-stone-100">Sign in</h1>
+
+  <%= form_with url: session_path, class: "space-y-4" do |form| %>
+    <div>
+      <%= form.label :username, class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+      <%= form.text_field :username, required: true, autofocus: true, autocomplete: "username",
+            value: params[:username],
+            class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
+    </div>
+
+    <div>
+      <%= form.label :password, class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+      <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72,
+            class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
+    </div>
+
+    <%= form.submit "Sign in", class: "w-full rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
+  <% end %>
+
+  <p class="mt-6 text-sm text-stone-500 dark:text-stone-400">
+    New here? <%= link_to "Create an account", new_registration_path, class: "text-amber-700 dark:text-amber-400 underline" %> to comment and react on trips.
+  </p>
+</div>

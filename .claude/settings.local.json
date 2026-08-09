@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//tmp/**)",
+      "Bash(curl -s -c cookies.txt -b cookies.txt http://localhost:3000/ -o home_logged.html)"
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+<% content_for :title, "Edit entry - #{@trip.title} - Trippy" %>
+
+<h1 class="font-bold text-3xl mb-6 text-stone-800 dark:text-stone-100">Edit entry</h1>
+
+<% if @entry.photos.any? %>
+  <section class="mb-8 max-w-lg">
+    <h2 class="text-sm font-medium text-stone-600 dark:text-stone-300 mb-2">Photos <span class="text-stone-400">(drag to reorder &mdash; first photo is used as the entry/trip thumbnail)</span></h2>
+    <div data-controller="reorder" class="flex flex-wrap gap-3">
+      <% @entry.photos.each do |photo| %>
+        <div data-reorder-target="item" data-url="<%= trip_trip_entry_photo_path(@trip, @entry, photo) %>" class="relative cursor-move">
+          <%= photo_thumb_tag photo, size: 96, css_class: "w-24 h-24 rounded-lg object-cover border border-stone-200 dark:border-stone-800" %>
+          <%= button_to "&times;".html_safe, trip_trip_entry_photo_path(@trip, @entry, photo), method: :delete,
+                form: { data: { turbo_confirm: "Remove this photo?" } },
+                class: "absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 hover:bg-red-500 text-white text-sm leading-none cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+<% end %>
+
+<%= form_with url: trip_trip_entry_photos_path(@trip, @entry), method: :post, multipart: true, class: "mb-8 max-w-lg flex items-end gap-3" do |form| %>
+  <div class="flex-1 min-w-0">
+    <%= form.label :photos, "Add more photos", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+    <input type="file" name="photos[]" multiple accept="image/*" class="block w-full max-w-full text-sm">
+  </div>
+  <%= form.submit "Upload", class: "shrink-0 rounded-md px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium cursor-pointer" %>
+<% end %>
+
+<%= form_with model: @entry, url: trip_trip_entry_path(@trip, @entry), class: "space-y-6 max-w-lg" do |form| %>
+  <% if @entry.errors.any? %>
+    <div class="rounded-lg bg-red-50 dark:bg-red-900/40 px-4 py-2.5 text-red-600 dark:text-red-300 text-sm">
+      <ul class="list-disc list-inside">
+        <% @entry.errors.full_messages.each { |m| concat(content_tag(:li, m)) } %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :title, class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+    <%= form.text_field :title, required: true,
+          class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
+  </div>
+
+  <div>
+    <%= form.label :description, "Description (Markdown supported)", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+    <%= form.text_area :description, rows: 5,
+          class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
+  </div>
+
+  <div data-controller="toggle">
+    <div class="flex items-center gap-2">
+      <%= form.check_box :manual_location, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700", data: { action: "toggle#sync" } %>
+      <%= form.label :manual_location, "Manually set location", class: "text-sm text-stone-600 dark:text-stone-300" %>
+    </div>
+    <div data-toggle-target="revealable" class="hidden grid grid-cols-2 gap-3 mt-2">
+      <%= form.number_field :latitude, step: "any", placeholder: "Latitude",
+            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2" %>
+      <%= form.number_field :longitude, step: "any", placeholder: "Longitude",
+            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2" %>
+    </div>
+  </div>
+
+  <div data-controller="toggle">
+    <div class="flex items-center gap-2">
+      <%= form.check_box :manual_time, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700", data: { action: "toggle#sync" } %>
+      <%= form.label :manual_time, "Manually set date & time", class: "text-sm text-stone-600 dark:text-stone-300" %>
+    </div>
+    <div data-toggle-target="revealable" class="hidden mt-2">
+      <%= form.datetime_field :occurred_at,
+            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2" %>
+      <p class="text-xs text-stone-400 mt-1">Used to order entries chronologically. Only visible to you.</p>
+    </div>
+  </div>
+
+  <%= form.submit "Save changes", class: "rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
+<% end %>

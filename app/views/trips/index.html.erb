@@ -1,0 +1,16 @@
+<% content_for :title, "My trips - Trippy" %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="font-bold text-3xl text-stone-800 dark:text-stone-100">My trips</h1>
+  <%= link_to "New trip", new_trip_path, class: "rounded-md px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white font-medium" %>
+</div>
+
+<% if @trips.any? %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    <% @trips.each do |trip| %>
+      <%= render "trips/card", trip: trip %>
+    <% end %>
+  </div>
+<% else %>
+  <p class="text-stone-500 dark:text-stone-400">You haven't created any trips yet.</p>
+<% end %>

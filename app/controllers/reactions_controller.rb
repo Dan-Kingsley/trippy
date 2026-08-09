@@ -1,0 +1,32 @@
+class ReactionsController < ApplicationController
+  before_action :require_authentication
+  before_action :set_trip_and_entry
+
+  def create
+    unless trip_accessible?(@trip)
+      redirect_to root_path, alert: "This trip is private." and return
+    end
+
+    emoji = params[:emoji]
+    existing = @entry.reactions.find_by(user: Current.user, emoji: emoji)
+
+    if existing
+      existing.destroy
+    else
+      @entry.reactions.create(user: Current.user, emoji: emoji)
+    end
+
+    redirect_to trip_trip_entry_path(@trip, @entry)
+  end
+
+  def destroy
+    @entry.reactions.where(user: Current.user, id: params[:id]).destroy_all
+    redirect_to trip_trip_entry_path(@trip, @entry)
+  end
+
+  private
+    def set_trip_and_entry
+      @trip = Trip.find_by!(slug: params[:trip_slug])
+      @entry = @trip.trip_entries.find(params[:trip_entry_id])
+    end
+end

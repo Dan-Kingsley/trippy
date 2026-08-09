@@ -1,0 +1,16 @@
+services:
+  trippy:
+    build: .
+    ports:
+      - "${PORT:-3000}:80"
+    environment:
+      RAILS_ENV: production
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      SOLID_QUEUE_IN_PUMA: "true"
+      RAILS_LOG_LEVEL: ${RAILS_LOG_LEVEL:-info}
+    volumes:
+      - trippy_storage:/rails/storage
+    restart: unless-stopped
+
+volumes:
+  trippy_storage:
