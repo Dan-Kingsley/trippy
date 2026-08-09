@@ -16,6 +16,7 @@ module PrivateTripAccess
     def trip_accessible?(trip)
       return true if trip.public?
       return true if unlocked_trip_codes.include?(trip.secret_code)
-      Current.user && Current.user.can_edit?(trip)
+      return false unless Current.user
+      Current.user.can_edit?(trip) || trip.trip_accesses.exists?(user_id: Current.user.id)
     end
 end

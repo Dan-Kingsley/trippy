@@ -1,0 +1,36 @@
+<div data-controller="reply-form">
+  <div class="flex justify-between items-start gap-3">
+    <div>
+      <p class="text-sm"><span class="font-medium text-stone-800 dark:text-stone-100"><%= comment.user.username %></span>
+        <span class="text-stone-400 dark:text-stone-500 text-xs"><%= comment.created_at.strftime("%-d %b %Y") %></span></p>
+      <p class="text-stone-700 dark:text-stone-200"><%= comment.body %></p>
+      <% if authenticated? && comment.parent_id.nil? %>
+        <button type="button" data-action="reply-form#toggle"
+          class="text-xs text-amber-700 dark:text-amber-400 hover:underline cursor-pointer mt-1">Reply</button>
+      <% end %>
+    </div>
+    <% if authenticated? && (comment.user_id == Current.user.id || @editable || Current.user.admin?) %>
+      <%= button_to "Delete", trip_trip_entry_comment_path(@trip, @entry, comment), method: :delete,
+            form: { data: { turbo_confirm: "Delete this comment?" } },
+            class: "text-xs text-red-600 dark:text-red-400 hover:underline cursor-pointer shrink-0" %>
+    <% end %>
+  </div>
+
+  <% if authenticated? && comment.parent_id.nil? %>
+    <%= form_with url: trip_trip_entry_comments_path(@trip, @entry), method: :post, scope: :comment,
+          data: { reply_form_target: "form" }, class: "hidden mt-2" do |form| %>
+      <%= form.hidden_field :parent_id, value: comment.id %>
+      <%= form.text_area :body, rows: 2, placeholder: "Reply…",
+            class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 text-sm focus:outline-2 focus:outline-amber-600" %>
+      <%= form.submit "Reply", class: "mt-2 rounded-md px-3 py-1 bg-amber-700 hover:bg-amber-600 text-white text-xs font-medium cursor-pointer" %>
+    <% end %>
+  <% end %>
+
+  <% if comment.replies.any? %>
+    <div class="mt-3 space-y-3 border-l-2 border-stone-200 dark:border-stone-800 pl-4">
+      <% comment.replies.each do |reply| %>
+        <%= render "comment", comment: reply %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

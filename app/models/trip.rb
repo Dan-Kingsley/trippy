@@ -5,6 +5,7 @@ class Trip < ApplicationRecord
 
   has_many :trip_collaborators, dependent: :destroy
   has_many :collaborators, through: :trip_collaborators, source: :user
+  has_many :trip_accesses, dependent: :destroy
   has_many :trip_entries, -> { order(:occurred_at) }, dependent: :destroy
   has_one_attached :cover_photo
 

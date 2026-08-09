@@ -6,7 +6,10 @@ class TripEntry < ApplicationRecord
   has_many :comments, dependent: :destroy
   has_many :reactions, dependent: :destroy
 
+  before_validation :default_occurred_at
+
   validates :title, presence: true
+  validates :occurred_at, presence: true
 
   def located?
     latitude.present? && longitude.present?
@@ -34,4 +37,11 @@ class TripEntry < ApplicationRecord
   def reaction_counts
     reactions.group(:emoji).count
   end
+
+  private
+    # Guarantees every entry has a date & time, even without EXIF data or a
+    # manual override - it falls back to when the entry was first uploaded.
+    def default_occurred_at
+      self.occurred_at ||= Time.current
+    end
 end

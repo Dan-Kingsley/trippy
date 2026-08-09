@@ -6,7 +6,7 @@ class TripEntriesController < ApplicationController
   before_action :set_entry, only: %i[ show edit update destroy ]
 
   def show
-    @comments = @entry.comments.includes(:user).order(:created_at)
+    @comments = @entry.comments.where(parent_id: nil).includes(:user, replies: :user).order(:created_at)
     @editable = Current.user&.can_edit?(@trip) || false
   end
 

@@ -7,6 +7,7 @@ class PrivateAccessesController < ApplicationController
 
     if trip
       remember_trip_code!(trip.secret_code)
+      TripAccess.find_or_create_by(trip: trip, user: Current.user) if Current.user
       redirect_to trip_path(trip)
     else
       redirect_to root_path, alert: "That code doesn't match any private trip."
