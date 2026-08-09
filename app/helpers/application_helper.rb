@@ -18,6 +18,22 @@ module ApplicationHelper
     end
   end
 
+  # Renders a user's profile picture as a variant, falling back to a circle
+  # with their initial when they haven't uploaded one.
+  def avatar_tag(user, size: 64, css_class: "")
+    return "" unless user
+
+    base_class = "rounded-full object-cover shrink-0 #{css_class}"
+    if user.profile_picture.attached?
+      image_tag user.profile_picture.variant(resize_to_fill: [ size, size ], saver: { quality: 80 }),
+        class: base_class, loading: "lazy", alt: user.username, title: user.username
+    else
+      content_tag :div, user.username.first.upcase,
+        class: "#{base_class} bg-stone-300 dark:bg-stone-700 text-stone-700 dark:text-stone-200 flex items-center justify-center font-medium",
+        title: user.username
+    end
+  end
+
   def render_markdown(text)
     return "" if text.blank?
     renderer = Redcarpet::Render::HTML.new(filter_html: true, safe_links_only: true)

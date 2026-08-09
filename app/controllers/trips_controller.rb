@@ -17,7 +17,11 @@ class TripsController < ApplicationController
       redirect_to root_path, alert: "This trip is private. Enter its access code to view it." and return
     end
 
-    @entries = @trip.trip_entries.includes(photos: { image_attachment: :blob })
+    @entries = @trip.trip_entries.includes(
+      photos: { image_attachment: :blob },
+      created_by: { profile_picture_attachment: :blob },
+      tagged_collaborators: { profile_picture_attachment: :blob }
+    )
     @editable = Current.user&.can_edit?(@trip) || false
   end
 

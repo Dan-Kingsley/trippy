@@ -9,6 +9,11 @@
     <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
       <%= @trip.public? ? "Public trip" : "Private trip" %> &middot; <%= pluralize(@entries.size, "entry") %>
     </p>
+    <div class="flex -space-x-2 mt-2">
+      <% @trip.editors.each do |user| %>
+        <%= avatar_tag user, size: 64, css_class: "w-8 h-8 text-xs ring-2 ring-stone-50 dark:ring-stone-900" %>
+      <% end %>
+    </div>
   </div>
 
   <% if @editable %>
@@ -56,11 +61,18 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <% @entries.each do |entry| %>
       <%= link_to trip_trip_entry_path(@trip, entry), class: "flex gap-3 items-center rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-3 hover:shadow-md transition-shadow" do %>
-        <% if entry.photos.first %>
-          <%= photo_thumb_tag entry.photos.first, size: 64, css_class: "w-16 h-16 rounded-lg object-cover shrink-0" %>
-        <% else %>
-          <div class="w-16 h-16 rounded-lg bg-stone-200 dark:bg-stone-800 shrink-0 flex items-center justify-center">📍</div>
-        <% end %>
+        <div class="relative shrink-0">
+          <% if entry.photos.first %>
+            <%= photo_thumb_tag entry.photos.first, size: 64, css_class: "w-16 h-16 rounded-lg object-cover" %>
+          <% else %>
+            <div class="w-16 h-16 rounded-lg bg-stone-200 dark:bg-stone-800 flex items-center justify-center">📍</div>
+          <% end %>
+          <div class="absolute -bottom-1.5 -right-1.5 flex -space-x-1.5">
+            <% entry.participants.each do |user| %>
+              <%= avatar_tag user, size: 32, css_class: "w-5 h-5 text-[8px] ring-2 ring-white dark:ring-stone-900" %>
+            <% end %>
+          </div>
+        </div>
         <div class="min-w-0">
           <p class="font-medium text-stone-800 dark:text-stone-100 truncate"><%= entry.title %></p>
           <p class="text-xs text-stone-500 dark:text-stone-400"><%= entry.occurred_at&.to_date&.strftime("%-d %b %Y") %></p>

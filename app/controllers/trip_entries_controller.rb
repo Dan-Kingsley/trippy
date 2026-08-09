@@ -87,7 +87,14 @@ class TripEntriesController < ApplicationController
       params.require(:trip_entry).permit(
         :title, :description, :latitude, :longitude, :occurred_at,
         :manual_location, :manual_time
-      )
+      ).merge(tagged_collaborator_ids: allowed_tagged_collaborator_ids)
+    end
+
+    # Restricts taggable "who else was there?" people to the trip's own
+    # owner/collaborators, regardless of what ids a tampered request sends.
+    def allowed_tagged_collaborator_ids
+      requested = Array(params.dig(:trip_entry, :tagged_collaborator_ids))
+      @trip.editors.where(id: requested).ids
     end
 
     def attach_photos(entry)

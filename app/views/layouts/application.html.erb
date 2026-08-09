@@ -51,7 +51,10 @@
               <% if Current.user.adventurer? %>
                 <%= link_to "Trips", trips_path, class: "px-1.5 sm:px-0 whitespace-nowrap text-stone-600 dark:text-stone-300 hover:text-amber-700 dark:hover:text-amber-400" %>
               <% end %>
-              <span class="text-stone-500 dark:text-stone-400 hidden md:inline"><%= Current.user.username %></span>
+              <%= link_to edit_settings_path, class: "flex items-center gap-1.5 text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400" do %>
+                <%= avatar_tag Current.user, size: 48, css_class: "w-6 h-6 text-[10px]" %>
+                <span class="hidden md:inline"><%= Current.user.username %></span>
+              <% end %>
               <%= button_to "Sign out", session_path, method: :delete, class: "whitespace-nowrap rounded-md px-2 sm:px-3 py-1.5 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 cursor-pointer" %>
             </div>
           <% else %>

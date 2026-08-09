@@ -6,6 +6,8 @@ class TripEntry < ApplicationRecord
   has_many :comments, dependent: :destroy
   has_many :reactions, dependent: :destroy
   has_many :trip_entry_views, dependent: :destroy
+  has_many :trip_entry_collaborators, dependent: :destroy
+  has_many :tagged_collaborators, through: :trip_entry_collaborators, source: :user
 
   before_validation :default_occurred_at
 
@@ -37,6 +39,12 @@ class TripEntry < ApplicationRecord
 
   def reaction_counts
     reactions.group(:emoji).count
+  end
+
+  # Everyone whose face should show on this entry: whoever created it, plus
+  # anyone else tagged as having been there for that part of the trip.
+  def participants
+    ([ created_by ] + tagged_collaborators).compact.uniq
   end
 
   private

@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   has_secure_password
+  has_one_attached :profile_picture
   has_many :sessions, dependent: :destroy
 
   has_many :owned_trips, class_name: "Trip", foreign_key: :owner_id, dependent: :destroy

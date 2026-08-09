@@ -8,5 +8,10 @@
       <%= pluralize(trip.trip_entries.size, "entry") %>
       <% unless trip.public? %> &middot; <span class="inline-flex items-center gap-1">🔒 Private</span><% end %>
     </p>
+    <div class="flex -space-x-2 mt-2">
+      <% trip.editors.each do |user| %>
+        <%= avatar_tag user, size: 48, css_class: "w-6 h-6 text-[10px] ring-2 ring-white dark:ring-stone-900" %>
+      <% end %>
+    </div>
   </div>
 <% end %>
