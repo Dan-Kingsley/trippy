@@ -41,6 +41,13 @@ class TripEntry < ApplicationRecord
     reactions.group(:emoji).count
   end
 
+  # The quick-pick emoji always show up first (even unused), followed by any
+  # custom emoji people have actually reacted with, most popular first.
+  def displayed_reaction_emojis
+    extra = reaction_counts.keys - Reaction::QUICK_EMOJI
+    Reaction::QUICK_EMOJI + extra.sort_by { |emoji| -reaction_counts[emoji] }
+  end
+
   # Everyone whose face should show on this entry: whoever created it, plus
   # anyone else tagged as having been there for that part of the trip.
   def participants

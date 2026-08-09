@@ -61,8 +61,8 @@
     <div class="prose-trip mt-3 text-stone-700 dark:text-stone-200"><%= render_markdown(@entry.description) %></div>
   <% end %>
 
-  <div class="flex flex-wrap gap-2 mt-5">
-    <% Reaction::EMOJI_OPTIONS.each do |emoji| %>
+  <div class="flex flex-wrap items-center gap-2 mt-5">
+    <% @entry.displayed_reaction_emojis.each do |emoji| %>
       <% count = @entry.reaction_counts[emoji].to_i %>
       <% mine = authenticated? && @entry.reactions.exists?(user: Current.user, emoji: emoji) %>
       <% if authenticated? %>
@@ -72,6 +72,21 @@
       <% else %>
         <span class="rounded-full px-3 py-1 text-sm border bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700"><%= emoji %> <%= count > 0 ? count : "" %></span>
       <% end %>
+    <% end %>
+
+    <% if authenticated? %>
+      <div class="relative" data-controller="emoji-picker">
+        <button type="button" data-action="emoji-picker#toggle" aria-label="Add another reaction"
+          class="rounded-full w-7 h-7 flex items-center justify-center text-sm border bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700 hover:bg-stone-200 dark:hover:bg-stone-700 cursor-pointer">+</button>
+
+        <div data-emoji-picker-target="popover" class="hidden absolute z-10 top-full left-0 mt-1 shadow-lg rounded-lg overflow-hidden">
+          <emoji-picker data-emoji-picker-target="picker" data-action="emoji-click->emoji-picker#select"></emoji-picker>
+        </div>
+
+        <%= form_with url: trip_trip_entry_reactions_path(@trip, @entry), method: :post, data: { emoji_picker_target: "form" }, class: "hidden" do |form| %>
+          <%= form.hidden_field :emoji, data: { emoji_picker_target: "input" } %>
+        <% end %>
+      </div>
     <% end %>
   </div>
 
