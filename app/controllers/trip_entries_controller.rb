@@ -8,6 +8,7 @@ class TripEntriesController < ApplicationController
   def show
     @comments = @entry.comments.where(parent_id: nil).includes(:user, replies: :user).order(:created_at)
     @editable = Current.user&.can_edit?(@trip) || false
+    record_view!
   end
 
   def new
@@ -61,6 +62,24 @@ class TripEntriesController < ApplicationController
     def require_editor
       unless performed? || Current.user.can_edit?(@trip)
         redirect_to trip_path(@trip), alert: "You don't have edit access to this trip."
+      end
+    end
+
+    # Skips the trip's owner/collaborators so they don't inflate view counts
+    # on their own trips, and dedupes repeat visits by account (signed in)
+    # or by a persistent per-device cookie (anonymous).
+    def record_view!
+      return if Current.user && @trip.editors.exists?(id: Current.user.id)
+
+      attrs = Current.user ? { user: Current.user } : { visitor_token: visitor_token }
+      @entry.trip_entry_views.find_or_create_by(attrs)
+    end
+
+    def visitor_token
+      cookies.signed[:visitor_token] || begin
+        token = SecureRandom.uuid
+        cookies.signed.permanent[:visitor_token] = { value: token, httponly: true, same_site: :lax }
+        token
       end
     end
 

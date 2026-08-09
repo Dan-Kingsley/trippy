@@ -5,6 +5,7 @@ class TripEntry < ApplicationRecord
   has_many :photos, -> { order(:position) }, dependent: :destroy
   has_many :comments, dependent: :destroy
   has_many :reactions, dependent: :destroy
+  has_many :trip_entry_views, dependent: :destroy
 
   before_validation :default_occurred_at
 
