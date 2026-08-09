@@ -1,25 +1,13 @@
 <% content_for :title, "Trippy" %>
 
-<% if @private_trips.any? %>
-  <section class="mb-10">
-    <h2 class="font-bold text-2xl mb-4 text-stone-800 dark:text-stone-100">Your private trips</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <% @private_trips.each do |trip| %>
-        <%= render "trips/card", trip: trip %>
-      <% end %>
-    </div>
-  </section>
-<% end %>
-
 <section class="mb-10">
-  <h2 class="font-bold text-2xl mb-4 text-stone-800 dark:text-stone-100">Public trips</h2>
-  <% if @public_trips.any? %>
+  <% if @trips.any? %>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <% @public_trips.each do |trip| %>
+      <% @trips.each do |trip| %>
         <%= render "trips/card", trip: trip %>
       <% end %>
     </div>
   <% else %>
-    <p class="text-stone-500 dark:text-stone-400">No public trips yet.</p>
+    <p class="text-stone-500 dark:text-stone-400">No trips yet.</p>
   <% end %>
 </section>

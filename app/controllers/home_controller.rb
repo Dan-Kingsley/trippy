@@ -1,8 +1,8 @@
 class HomeController < ApplicationController
   def index
-    @public_trips = Trip.where(public: true).ordered_by_latest_entry
+    private_trip_ids = Trip.where(public: false, secret_code: unlocked_trip_codes).pluck(:id)
+    private_trip_ids |= Current.user.trip_accesses.pluck(:trip_id) if Current.user
 
-    codes = unlocked_trip_codes
-    @private_trips = codes.any? ? Trip.where(public: false, secret_code: codes).ordered_by_latest_entry : Trip.none
+    @trips = Trip.where(public: true).or(Trip.where(id: private_trip_ids)).ordered_by_latest_entry
   end
 end
