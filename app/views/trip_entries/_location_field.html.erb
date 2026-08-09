@@ -1,0 +1,28 @@
+<div data-controller="toggle location-picker"
+     <% if entry.latitude.present? && entry.longitude.present? %>
+       data-location-picker-lat-value="<%= entry.latitude %>"
+       data-location-picker-lng-value="<%= entry.longitude %>"
+     <% end %>>
+  <div class="flex items-center gap-2">
+    <%= form.check_box :manual_location, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700",
+          data: { action: "toggle#sync location-picker#sync" } %>
+    <%= form.label :manual_location, "Manually set location", class: "text-sm text-stone-600 dark:text-stone-300" %>
+  </div>
+  <div data-toggle-target="revealable" class="hidden mt-2 space-y-2">
+    <div class="relative">
+      <div data-location-picker-target="map" class="h-56 w-full rounded-md border border-stone-300 dark:border-stone-700 z-0"></div>
+      <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <svg viewBox="0 0 24 24" class="w-8 h-8 text-red-600 drop-shadow" style="transform: translateY(-50%)" fill="currentColor">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" />
+        </svg>
+      </div>
+    </div>
+    <p class="text-xs text-stone-400">Drag the map until the pin marks the right spot.</p>
+    <div class="grid grid-cols-2 gap-3">
+      <%= form.number_field :latitude, step: "any", readonly: true, data: { location_picker_target: "lat" },
+            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-stone-100 dark:bg-stone-800/60 px-3 py-2 text-stone-500 dark:text-stone-400" %>
+      <%= form.number_field :longitude, step: "any", readonly: true, data: { location_picker_target: "lng" },
+            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-stone-100 dark:bg-stone-800/60 px-3 py-2 text-stone-500 dark:text-stone-400" %>
+    </div>
+  </div>
+</div>

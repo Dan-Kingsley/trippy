@@ -1,4 +1,7 @@
 <% content_for :title, "Edit entry - #{@trip.title} - Trippy" %>
+<% content_for :head do %>
+  <%= stylesheet_link_tag "leaflet", "data-turbo-track": "reload" %>
+<% end %>
 
 <h1 class="font-bold text-3xl mb-6 text-stone-800 dark:text-stone-100">Edit entry</h1>
 
@@ -18,12 +21,16 @@
   </section>
 <% end %>
 
-<%= form_with url: trip_trip_entry_photos_path(@trip, @entry), method: :post, multipart: true, class: "mb-8 max-w-lg flex items-end gap-3" do |form| %>
-  <div class="flex-1 min-w-0">
-    <%= form.label :photos, "Add more photos", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
-    <input type="file" name="photos[]" multiple accept="image/*" class="block w-full max-w-full text-sm">
+<%= form_with url: trip_trip_entry_photos_path(@trip, @entry), method: :post, multipart: true, class: "mb-8 max-w-lg", data: { controller: "photo-date" } do |form| %>
+  <div class="flex items-end gap-3">
+    <div class="flex-1 min-w-0">
+      <%= form.label :photos, "Add more photos", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+      <input type="file" name="photos[]" multiple accept="image/*" class="block w-full max-w-full text-sm"
+             data-photo-date-target="input" data-action="change->photo-date#preview">
+    </div>
+    <%= form.submit "Upload", class: "shrink-0 rounded-md px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium cursor-pointer" %>
   </div>
-  <%= form.submit "Upload", class: "shrink-0 rounded-md px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium cursor-pointer" %>
+  <p data-photo-date-target="status" class="hidden text-xs mt-1 text-amber-700 dark:text-amber-400"></p>
 <% end %>
 
 <%= form_with model: @entry, url: trip_trip_entry_path(@trip, @entry), class: "space-y-6 max-w-lg" do |form| %>
@@ -47,18 +54,7 @@
           class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
   </div>
 
-  <div data-controller="toggle">
-    <div class="flex items-center gap-2">
-      <%= form.check_box :manual_location, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700", data: { action: "toggle#sync" } %>
-      <%= form.label :manual_location, "Manually set location", class: "text-sm text-stone-600 dark:text-stone-300" %>
-    </div>
-    <div data-toggle-target="revealable" class="hidden grid grid-cols-2 gap-3 mt-2">
-      <%= form.number_field :latitude, step: "any", placeholder: "Latitude",
-            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2" %>
-      <%= form.number_field :longitude, step: "any", placeholder: "Longitude",
-            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2" %>
-    </div>
-  </div>
+  <%= render "location_field", form: form, entry: @entry %>
 
   <div data-controller="toggle">
     <div class="flex items-center gap-2">
