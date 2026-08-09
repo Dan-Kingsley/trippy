@@ -29,13 +29,16 @@ account required.
    docker compose up -d --build
    ```
 
-3. Visit `http://localhost:3000` and sign up — **the first account created
+3. Visit `http://localhost:3003` and sign up — **the first account created
    becomes the admin** and an adventurer automatically. Use the admin panel
    (top right, once signed in) to grant adventurer access to other users by
    username; everyone else who signs up is a viewer who can comment/react.
 
 The SQLite databases and uploaded photos are stored in the `trippy_storage`
 Docker volume, so they persist across restarts and rebuilds.
+
+## Reverse proxy network
+use `reverse-proxy` network to connect trippy to your caddy reverse proxy
 
 ## Local development (without Docker)
 
