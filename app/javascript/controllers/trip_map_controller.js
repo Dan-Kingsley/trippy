@@ -36,10 +36,12 @@ export default class extends Controller {
       L.marker([ entry.lat, entry.lng ], { icon, title: entry.title }).addTo(this.map)
     })
 
+    // Capped below their "natural" zoom so the initial view stays more
+    // zoomed out; the user can always zoom in further from here.
     if (located.length === 1) {
-      this.map.setView(latLngs[0], 13)
+      this.map.setView(latLngs[0], 10)
     } else {
-      this.map.fitBounds(latLngs, { padding: [ 40, 40 ] })
+      this.map.fitBounds(latLngs, { padding: [ 40, 40 ], maxZoom: 10 })
     }
   }
 

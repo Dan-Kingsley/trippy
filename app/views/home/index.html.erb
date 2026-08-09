@@ -23,13 +23,3 @@
     <p class="text-stone-500 dark:text-stone-400">No public trips yet.</p>
   <% end %>
 </section>
-
-<section class="max-w-md">
-  <h2 class="font-bold text-xl mb-3 text-stone-800 dark:text-stone-100">Have a private trip code?</h2>
-  <%= form_with url: private_accesses_path, method: :post, class: "flex gap-2" do |form| %>
-    <%= form.text_field :code, placeholder: "Enter 32-character code", maxlength: 32,
-          class: "flex-1 min-w-0 rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
-    <%= form.submit "View trip", class: "shrink-0 rounded-md px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
-  <% end %>
-  <p class="text-xs text-stone-400 mt-2">Codes you enter (or open via a shared link) are remembered on this device.</p>
-</section>
