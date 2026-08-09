@@ -9,12 +9,12 @@ class TripsController < ApplicationController
   end
 
   def show
-    unless trip_accessible?(@trip)
-      redirect_to root_path, alert: "This trip is private. Enter its access code to view it." and return
-    end
-
     if params[:code].present? && params[:code] == @trip.secret_code && !unlocked_trip_codes.include?(@trip.secret_code)
       remember_trip_code!(@trip.secret_code)
+    end
+
+    unless trip_accessible?(@trip)
+      redirect_to root_path, alert: "This trip is private. Enter its access code to view it." and return
     end
 
     @entries = @trip.trip_entries.includes(photos: { image_attachment: :blob })
