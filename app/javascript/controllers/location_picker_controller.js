@@ -20,6 +20,12 @@ export default class extends Controller {
 
     this.updateCoordinates()
     this.map.on("move", () => this.updateCoordinates())
+
+    // If this map starts out visible (location already manually set), it's
+    // measured the instant it's created, which can race the browser's layout
+    // of the surrounding page and leave it sized/positioned incorrectly.
+    // Re-measuring on the next frame settles it either way.
+    requestAnimationFrame(() => this.map.invalidateSize())
   }
 
   // Called (after toggle#sync) when the "manually set location" checkbox
