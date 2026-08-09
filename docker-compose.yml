@@ -3,7 +3,7 @@ services:
     container_name: trippy
     build: .
     ports:
-      - "${PORT:-3003}:80"
+      - "${PORT:-3003}:3000"
     environment:
       RAILS_ENV: production
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
