@@ -1,5 +1,6 @@
 services:
   trippy:
+    container_name: trippy
     build: .
     ports:
       - "${PORT:-3003}:80"
