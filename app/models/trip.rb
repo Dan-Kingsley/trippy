@@ -11,8 +11,15 @@ class Trip < ApplicationRecord
 
   validates :title, presence: true
 
-  before_validation :assign_slug, on: :create
+  before_validation :assign_slug
   before_validation :assign_secret_code, on: :create
+
+  # Trips with no dated entries yet sort to the end, newest-entry trips first.
+  scope :ordered_by_latest_entry, -> {
+    left_joins(:trip_entries)
+      .group("trips.id")
+      .order(Arel.sql("MAX(trip_entries.occurred_at) IS NULL, MAX(trip_entries.occurred_at) DESC"))
+  }
 
   def to_param
     slug
@@ -28,14 +35,18 @@ class Trip < ApplicationRecord
   end
 
   private
+    # Regenerates the slug (and so the trip's URL) whenever the title changes,
+    # not just on creation, so the URL always reflects the current name.
     def assign_slug
-      return if slug.present?
+      return if slug.present? && !title_changed?
 
       base = title.to_s.parameterize
       base = "trip" if base.blank?
       loop do
         candidate = "#{base}-#{SecureRandom.alphanumeric(6).downcase}"
-        unless Trip.exists?(slug: candidate)
+        scope = Trip.where(slug: candidate)
+        scope = scope.where.not(id: id) if persisted?
+        unless scope.exists?
           self.slug = candidate
           break
         end

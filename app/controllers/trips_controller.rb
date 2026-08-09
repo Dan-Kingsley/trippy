@@ -5,7 +5,7 @@ class TripsController < ApplicationController
   before_action :require_owner_or_admin, only: %i[ destroy ]
 
   def index
-    @trips = Current.user.trips.order(created_at: :desc)
+    @trips = Current.user.trips.ordered_by_latest_entry
   end
 
   def show
