@@ -5,7 +5,7 @@
      <% end %>>
   <div class="flex items-center gap-2">
     <%= form.check_box :manual_location, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700",
-          data: { action: "toggle#sync location-picker#sync" } %>
+          data: { action: "toggle#sync location-picker#sync", photo_date_target: "locationCheckbox" } %>
     <%= form.label :manual_location, "Manually set location", class: "text-sm text-stone-600 dark:text-stone-300" %>
   </div>
   <div data-toggle-target="revealable" class="hidden mt-2 space-y-2">
