@@ -40,8 +40,10 @@ module Authentication
     end
 
     def request_authentication
-      session[:return_to_after_authenticating] = request.url
-      redirect_to new_session_path
+      # A POST/DELETE URL (e.g. adding a reaction) isn't a page to revisit -
+      # send them back to wherever the request came from instead.
+      session[:return_to_after_authenticating] = request.get? ? request.url : request.referer
+      redirect_to new_session_path, alert: "Sign in to do that."
     end
 
     def after_authentication_url

@@ -65,13 +65,9 @@
     <% @entry.displayed_reaction_emojis.each do |emoji| %>
       <% count = @entry.reaction_counts[emoji].to_i %>
       <% mine = authenticated? && @entry.reactions.exists?(user: Current.user, emoji: emoji) %>
-      <% if authenticated? %>
-        <%= button_to "#{emoji} #{count > 0 ? count : ''}".strip, trip_trip_entry_reactions_path(@trip, @entry), method: :post,
-              params: { emoji: emoji },
-              class: "rounded-full px-3 py-1 text-sm border #{mine ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700' : 'bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700'} cursor-pointer" %>
-      <% else %>
-        <span class="rounded-full px-3 py-1 text-sm border bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700"><%= emoji %> <%= count > 0 ? count : "" %></span>
-      <% end %>
+      <%= button_to "#{emoji} #{count > 0 ? count : ''}".strip, trip_trip_entry_reactions_path(@trip, @entry), method: :post,
+            params: { emoji: emoji },
+            class: "rounded-full px-3 py-1 text-sm border #{mine ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700' : 'bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700'} cursor-pointer" %>
     <% end %>
 
     <% if authenticated? %>
