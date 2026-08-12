@@ -26,6 +26,27 @@ export default class extends Controller {
     // of the surrounding page and leave it sized/positioned incorrectly.
     // Re-measuring on the next frame settles it either way.
     requestAnimationFrame(() => this.map.invalidateSize())
+
+    // With no real (photo/manual) location yet, nudge the starting view
+    // towards roughly where the adventurer is, via their IP, instead of the
+    // whole world - just to cut down on map-dragging, not a claim that's
+    // where the entry happened. Backs off quietly if the guess fails,
+    // arrives late, or they've already started dragging themselves.
+    if (!located) {
+      this.awaitingIpGuess = true
+      this.map.once("dragstart zoomstart", () => { this.awaitingIpGuess = false })
+      this.guessLocationFromIp()
+    }
+  }
+
+  async guessLocationFromIp() {
+    try {
+      const response = await fetch("https://ipwho.is/")
+      const { success, latitude, longitude } = await response.json()
+      if (success && this.awaitingIpGuess) this.map.setView([ latitude, longitude ], 11)
+    } catch {
+      // Best-effort only - the world-view default stands if this fails.
+    }
   }
 
   // Called (after toggle#sync) when the "manually set location" checkbox
@@ -44,6 +65,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.awaitingIpGuess = false
     this.map?.remove()
   }
 }
