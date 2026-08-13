@@ -14,13 +14,17 @@ const SWIPE_THRESHOLD = 40
 // photos, and tapping/clicking the far left or right 10% of the screen
 // steps back/forward - the on-screen arrows there only reveal on hover
 // over those edges (see the group-hover classes in the view). Pinch (or
-// ArrowUp/ArrowDown) zooms into the current lightbox photo, and dragging
-// with one finger pans around while zoomed in; zoom always resets when the
-// photo changes or the lightbox closes. The inline carousel (lightbox
-// closed) also responds to ArrowLeft/ArrowRight while it has keyboard focus.
-// The mouse wheel zooms in/out centered on the cursor position, and once
-// zoomed in, click-and-drag pans the image; a drag is not treated as a
-// click so it doesn't also close the lightbox.
+// ArrowUp/ArrowDown) zooms into the current lightbox photo, anchored to
+// the pinch midpoint so it zooms into wherever the fingers are rather than
+// always the image center, and dragging with one finger pans around while
+// zoomed in; lifting one finger mid-pinch hands off to a single-finger pan
+// using the remaining finger rather than requiring a fresh touch. Zoom
+// always resets when the photo changes or the lightbox closes, and a
+// single tap still closes the lightbox as usual. The inline carousel
+// (lightbox closed) also responds to ArrowLeft/ArrowRight while it has
+// keyboard focus. The mouse wheel zooms in/out centered on the cursor
+// position, and once zoomed in, click-and-drag pans the image; a drag is
+// not treated as a click so it doesn't also close the lightbox.
 export default class extends Controller {
   static targets = [ "track", "dot", "lightbox", "lightboxImage" ]
 
@@ -133,6 +137,16 @@ export default class extends Controller {
       this.touchStartX = null
       this.pinchStartDistance = this.touchDistance(event.touches)
       this.pinchStartScale = this.scale
+      this.pinchStartTranslateX = this.translateX
+      this.pinchStartTranslateY = this.translateY
+
+      const mid = this.touchMidpoint(event.touches)
+      this.pinchStartMidX = mid.x
+      this.pinchStartMidY = mid.y
+
+      const rect = this.lightboxImageTarget.getBoundingClientRect()
+      this.pinchStartCenterX = rect.left + rect.width / 2
+      this.pinchStartCenterY = rect.top + rect.height / 2
       return
     }
 
@@ -152,8 +166,22 @@ export default class extends Controller {
   onTouchMove(event) {
     if (this.pinching && event.touches.length === 2) {
       event.preventDefault()
+
       const distance = this.touchDistance(event.touches)
-      this.applyZoom(this.pinchStartScale * (distance / this.pinchStartDistance))
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, this.pinchStartScale * (distance / this.pinchStartDistance)))
+      const ratio = newScale / this.pinchStartScale
+
+      // Keep the point under the fingers fixed on screen as the scale
+      // changes, and follow the pinch midpoint as it moves, so pinching
+      // zooms into (and pans with) where the fingers actually are rather
+      // than always zooming straight into the image center.
+      const mid = this.touchMidpoint(event.touches)
+      this.translateX = this.pinchStartTranslateX + (mid.x - this.pinchStartMidX) +
+        (this.pinchStartMidX - this.pinchStartCenterX) * (1 - ratio)
+      this.translateY = this.pinchStartTranslateY + (mid.y - this.pinchStartMidY) +
+        (this.pinchStartMidY - this.pinchStartCenterY) * (1 - ratio)
+
+      this.applyZoom(newScale)
       return
     }
 
@@ -167,6 +195,21 @@ export default class extends Controller {
 
   onTouchEnd(event) {
     if (this.pinching) {
+      // A second finger lifting off a pinch fires its own touchend while one
+      // finger remains down - hand off to a single-finger pan from here
+      // instead of waiting for a fresh touchstart, so zoom and pan feel like
+      // one continuous gesture.
+      if (event.touches.length === 1) {
+        this.pinching = false
+        this.panStart = {
+          x: event.touches[0].clientX,
+          y: event.touches[0].clientY,
+          translateX: this.translateX,
+          translateY: this.translateY
+        }
+        return
+      }
+
       this.pinching = false
       this.pinchStartDistance = null
       if (this.scale <= MIN_SCALE) this.resetZoom()
@@ -189,6 +232,13 @@ export default class extends Controller {
 
   touchDistance(touches) {
     return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY)
+  }
+
+  touchMidpoint(touches) {
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2
+    }
   }
 
   onWheel(event) {
