@@ -11,14 +11,14 @@
   </div>
 <% end %>
 
-<div data-controller="carousel" data-action="keydown@window->carousel#closeOnEscape">
+<div data-controller="carousel" data-action="keydown@window->carousel#onKeydown">
   <% if @entry.photos.any? %>
     <div class="relative rounded-xl overflow-hidden bg-stone-200 dark:bg-stone-800">
-      <div data-carousel-target="track" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar">
+      <div data-carousel-target="track" data-action="scroll->carousel#onScroll" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar">
         <% @entry.photos.each do |photo| %>
           <div class="snap-center shrink-0 w-full aspect-[4/3] sm:aspect-[16/9]">
             <%= image_tag photo.image.variant(resize_to_limit: [ 1600, 1600 ], saver: { quality: 85 }),
-                  class: "w-full h-full object-cover cursor-zoom-in",
+                  class: "w-full h-full object-contain cursor-zoom-in",
                   data: { action: "click->carousel#open", full_src: url_for(photo.image.variant(resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 })) } %>
           </div>
         <% end %>
@@ -32,7 +32,7 @@
 
         <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
           <% @entry.photos.each_with_index do |_photo, i| %>
-            <button type="button" data-action="carousel#goTo" data-index="<%= i %>" aria-label="Go to photo <%= i + 1 %>"
+            <button type="button" data-action="carousel#goTo" data-carousel-target="dot" data-index="<%= i %>" aria-label="Go to photo <%= i + 1 %>"
               class="w-2 h-2 rounded-full <%= i == 0 ? 'bg-white' : 'bg-white/40' %>"></button>
           <% end %>
         </div>
@@ -40,8 +40,20 @@
     </div>
   <% end %>
 
-  <div data-carousel-target="lightbox" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" data-action="click->carousel#close">
+  <div data-carousel-target="lightbox" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+       data-action="click->carousel#close touchstart->carousel#onTouchStart touchend->carousel#onTouchEnd">
     <img data-carousel-target="lightboxImage" class="max-w-full max-h-full object-contain" src="">
+
+    <% if @entry.photos.size > 1 %>
+      <button type="button" data-action="carousel#prev" aria-label="Previous photo"
+        class="group absolute inset-y-0 left-0 w-[10%] flex items-center justify-start pl-2 cursor-pointer">
+        <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 group-hover:bg-black/60 text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl leading-none">&#8249;</span>
+      </button>
+      <button type="button" data-action="carousel#next" aria-label="Next photo"
+        class="group absolute inset-y-0 right-0 w-[10%] flex items-center justify-end pr-2 cursor-pointer">
+        <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 group-hover:bg-black/60 text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl leading-none">&#8250;</span>
+      </button>
+    <% end %>
   </div>
 </div>
 

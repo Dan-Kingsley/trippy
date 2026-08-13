@@ -23,7 +23,7 @@ export default class extends Controller {
     const latLngs = located.map((e) => [ e.lat, e.lng ])
 
     if (located.length > 1) {
-      L.polyline(latLngs, { color: "#b45309", weight: 3, opacity: 0.75 }).addTo(this.map)
+      L.polyline(this.unwrapAntimeridian(latLngs), { color: "#b45309", weight: 3, opacity: 0.75 }).addTo(this.map)
     }
 
     located.forEach((entry) => {
@@ -47,5 +47,28 @@ export default class extends Controller {
 
   disconnect() {
     this.map?.remove()
+  }
+
+  // Leaflet draws a polyline as a straight connection between the raw
+  // lat/lngs it's given, so a trip that crosses the antimeridian (e.g. from
+  // 179° to -179°) would otherwise be drawn the "long way" around the whole
+  // globe instead of the short hop across the 180/-180 seam. Keeping each
+  // point's longitude continuous with the previous one (letting it drift
+  // outside the normal -180..180 range as needed) makes Leaflet draw the
+  // short way across instead - the map still renders it in the correct place
+  // since longitudes just repeat every 360°.
+  unwrapAntimeridian(latLngs) {
+    const unwrapped = [ latLngs[0] ]
+
+    for (let i = 1; i < latLngs.length; i++) {
+      const [ lat, lng ] = latLngs[i]
+      const prevLng = unwrapped[i - 1][1]
+      let adjusted = lng
+      while (adjusted - prevLng > 180) adjusted -= 360
+      while (adjusted - prevLng < -180) adjusted += 360
+      unwrapped.push([ lat, adjusted ])
+    }
+
+    return unwrapped
   }
 }
