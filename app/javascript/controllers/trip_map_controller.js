@@ -20,20 +20,26 @@ export default class extends Controller {
       return
     }
 
-    const latLngs = located.map((e) => [ e.lat, e.lng ])
+    // Unwrapped once and reused for the line, the markers, and the bounds
+    // fit below - a trip that crosses the antimeridian is only ~10s of km
+    // wide in reality, and all three need to agree it's a short hop near
+    // the 180/-180 seam rather than raw coordinates ~358° apart, or the map
+    // would zoom out to fit "the whole world" and strand the markers on
+    // opposite edges of the screen.
+    const latLngs = this.unwrapAntimeridian(located.map((e) => [ e.lat, e.lng ]))
 
     if (located.length > 1) {
-      L.polyline(this.unwrapAntimeridian(latLngs), { color: "#b45309", weight: 3, opacity: 0.75 }).addTo(this.map)
+      L.polyline(latLngs, { color: "#b45309", weight: 3, opacity: 0.75 }).addTo(this.map)
     }
 
-    located.forEach((entry) => {
+    located.forEach((entry, i) => {
       const icon = L.divIcon({
         className: "trip-map-marker",
         html: `<a href="${entry.url}" class="block w-12 h-12 rounded-full border-2 border-white dark:border-stone-900 shadow-md overflow-hidden bg-stone-300 bg-cover bg-center" style="background-image:url('${entry.thumbnail_url || ""}')"></a>`,
         iconSize: [ 48, 48 ],
         iconAnchor: [ 24, 24 ]
       })
-      L.marker([ entry.lat, entry.lng ], { icon, title: entry.title }).addTo(this.map)
+      L.marker(latLngs[i], { icon, title: entry.title }).addTo(this.map)
     })
 
     // Capped below their "natural" zoom so the initial view stays more
@@ -49,14 +55,14 @@ export default class extends Controller {
     this.map?.remove()
   }
 
-  // Leaflet draws a polyline as a straight connection between the raw
-  // lat/lngs it's given, so a trip that crosses the antimeridian (e.g. from
-  // 179° to -179°) would otherwise be drawn the "long way" around the whole
-  // globe instead of the short hop across the 180/-180 seam. Keeping each
-  // point's longitude continuous with the previous one (letting it drift
-  // outside the normal -180..180 range as needed) makes Leaflet draw the
-  // short way across instead - the map still renders it in the correct place
-  // since longitudes just repeat every 360°.
+  // Leaflet treats lat/lngs as plain numbers, so a trip that crosses the
+  // antimeridian (e.g. from 179° to -179°, ~2° apart in reality) reads as
+  // ~358° apart unless corrected - drawing the polyline the "long way"
+  // around the globe, and blowing out fitBounds/marker placement to match.
+  // Keeping each point's longitude continuous with the previous one
+  // (letting it drift outside the normal -180..180 range as needed) fixes
+  // all three at once - the map still renders it in the correct place since
+  // longitudes just repeat every 360°.
   unwrapAntimeridian(latLngs) {
     const unwrapped = [ latLngs[0] ]
 
