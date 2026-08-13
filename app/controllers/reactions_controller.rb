@@ -24,6 +24,15 @@ class ReactionsController < ApplicationController
     redirect_to trip_trip_entry_path(@trip, @entry)
   end
 
+  def users
+    unless Current.user.can_edit?(@trip)
+      head :forbidden and return
+    end
+
+    reactors = @entry.reactions.where(emoji: params[:emoji]).includes(:user).map(&:user)
+    render partial: "reactions/reactor_list", locals: { emoji: params[:emoji], reactors: reactors }, layout: false
+  end
+
   private
     def set_trip_and_entry
       @trip = Trip.find_by!(slug: params[:trip_slug])

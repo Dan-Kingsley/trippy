@@ -36,6 +36,12 @@ class User < ApplicationRecord
     trip.owner_id == id || trip.collaborators.exists?(id: id)
   end
 
+  # This user's own emoji, most-recently-used first, across all trips -
+  # used to personalize reaction suggestions and the emoji picker.
+  def recent_emojis(limit: 6)
+    reactions.order(created_at: :desc).limit(50).pluck(:emoji).uniq.first(limit)
+  end
+
   private
     def bootstrap_first_user_as_admin
       if User.count.zero?

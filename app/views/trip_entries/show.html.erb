@@ -8,7 +8,8 @@
   </div>
 <% end %>
 
-<div data-controller="carousel" data-action="keydown@window->carousel#onKeydown">
+<div data-controller="carousel" data-action="keydown@window->carousel#onKeydown" tabindex="0"
+  class="rounded-xl focus:outline-2 focus:outline-amber-600 focus:outline-offset-2">
   <% if @entry.photos.any? %>
     <div class="relative rounded-xl overflow-hidden bg-stone-200 dark:bg-stone-800">
       <div data-carousel-target="track" data-action="scroll->carousel#onScroll" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar">
@@ -37,9 +38,9 @@
     </div>
   <% end %>
 
-  <div data-carousel-target="lightbox" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-       data-action="click->carousel#close touchstart->carousel#onTouchStart touchend->carousel#onTouchEnd">
-    <img data-carousel-target="lightboxImage" class="max-w-full max-h-full object-contain" src="">
+  <div data-carousel-target="lightbox" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 touch-none"
+       data-action="click->carousel#close touchstart->carousel#onTouchStart touchmove->carousel#onTouchMove touchend->carousel#onTouchEnd">
+    <img data-carousel-target="lightboxImage" class="max-w-full max-h-full object-contain touch-none" src="">
 
     <% if @entry.photos.size > 1 %>
       <button type="button" data-action="carousel#prev" aria-label="Previous photo"
@@ -64,7 +65,7 @@
     </div>
     <% if @trip_member %>
       <p class="text-xs text-stone-500 dark:text-stone-400">
-        <%= pluralize(@entry.views_count, "view") %> &middot; <%= pluralize(@trip.favorites_count, "favourite") %>
+        <%= pluralize(@entry.views_count, "view") %>
       </p>
     <% end %>
   </div>
@@ -72,28 +73,70 @@
     <div class="prose-trip mt-3 text-stone-700 dark:text-stone-200"><%= render_markdown(@entry.description) %></div>
   <% end %>
 
-  <div class="flex flex-wrap items-center gap-2 mt-5">
-    <% @entry.displayed_reaction_emojis.each do |emoji| %>
+  <div class="flex flex-wrap items-center gap-2 mt-5"
+    <% if @editable %>
+      data-controller="reaction-users"
+      data-reaction-users-users-url-value="<%= users_trip_trip_entry_reactions_path(@trip, @entry) %>"
+    <% end %>
+  >
+    <% @entry.displayed_reaction_emojis(user: Current.user).each do |emoji| %>
       <% count = @entry.reaction_counts[emoji].to_i %>
       <% mine = authenticated? && @entry.reactions.exists?(user: Current.user, emoji: emoji) %>
       <%= button_to "#{emoji} #{count > 0 ? count : ''}".strip, trip_trip_entry_reactions_path(@trip, @entry), method: :post,
             params: { emoji: emoji },
-            class: "rounded-full px-3 py-1 text-sm border #{mine ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700' : 'bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700'} cursor-pointer" %>
+            class: "rounded-full px-3 py-1 text-sm border #{mine ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700' : 'bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700'} cursor-pointer",
+            data: (@editable ? {
+              emoji: emoji,
+              action: "contextmenu->reaction-users#show touchstart->reaction-users#onTouchStart touchmove->reaction-users#onTouchMove touchend->reaction-users#onTouchEnd click->reaction-users#onClick"
+            } : {}) %>
     <% end %>
 
     <% if authenticated? %>
+      <% recent_emojis = Current.user.recent_emojis(limit: 6) %>
+      <% has_reacted_before = Current.user.reactions.exists? %>
       <div class="relative" data-controller="emoji-picker">
         <button type="button" data-action="emoji-picker#toggle" aria-label="Add another reaction"
           class="rounded-full w-7 h-7 flex items-center justify-center text-sm border bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700 hover:bg-stone-200 dark:hover:bg-stone-700 cursor-pointer">+</button>
 
-        <div data-emoji-picker-target="popover" class="hidden absolute z-10 top-full left-0 mt-1 shadow-lg rounded-lg overflow-hidden">
-          <emoji-picker data-emoji-picker-target="picker" data-action="emoji-click->emoji-picker#select"></emoji-picker>
+        <div data-emoji-picker-target="popover" class="hidden absolute z-10 top-full left-0 mt-1 shadow-lg rounded-lg overflow-hidden bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700">
+          <div class="flex text-xs font-medium border-b border-stone-200 dark:border-stone-700">
+            <button type="button" data-action="emoji-picker#showRecent" data-emoji-picker-target="recentTab"
+              class="flex-1 px-3 py-1.5 cursor-pointer <%= has_reacted_before ? 'text-amber-700 dark:text-amber-400 border-b-2 border-amber-600' : 'text-stone-500 dark:text-stone-400' %>">Recent</button>
+            <button type="button" data-action="emoji-picker#showAll" data-emoji-picker-target="allTab"
+              class="flex-1 px-3 py-1.5 cursor-pointer <%= has_reacted_before ? 'text-stone-500 dark:text-stone-400' : 'text-amber-700 dark:text-amber-400 border-b-2 border-amber-600' %>">All</button>
+          </div>
+
+          <div data-emoji-picker-target="recentPanel" class="<%= 'hidden' unless has_reacted_before %> p-2 flex flex-wrap gap-1 w-64">
+            <% if recent_emojis.any? %>
+              <% recent_emojis.each do |emoji| %>
+                <button type="button" data-action="emoji-picker#selectRecent" data-emoji="<%= emoji %>"
+                  class="rounded-full w-9 h-9 flex items-center justify-center text-lg hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"><%= emoji %></button>
+              <% end %>
+            <% else %>
+              <p class="text-xs text-stone-400 dark:text-stone-500 px-1 py-2">No recent reactions yet.</p>
+            <% end %>
+          </div>
+
+          <div data-emoji-picker-target="allPanel" class="<%= 'hidden' if has_reacted_before %>">
+            <emoji-picker data-emoji-picker-target="picker" data-action="emoji-click->emoji-picker#select"></emoji-picker>
+          </div>
         </div>
 
         <%= form_with url: trip_trip_entry_reactions_path(@trip, @entry), method: :post, data: { emoji_picker_target: "form" }, class: "hidden" do |form| %>
           <%= form.hidden_field :emoji, data: { emoji_picker_target: "input" } %>
         <% end %>
       </div>
+    <% end %>
+
+    <% if @editable %>
+      <dialog data-reaction-users-target="dialog" data-action="click->reaction-users#closeOnBackdrop"
+        class="m-auto rounded-xl p-0 border-0 backdrop:bg-black/50 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100 w-full max-w-xs">
+        <div class="p-5 flex items-start justify-between gap-3">
+          <div data-reaction-users-target="content" class="text-sm text-stone-500 dark:text-stone-400 min-w-0 flex-1">Loading&hellip;</div>
+          <button type="button" data-action="reaction-users#close" aria-label="Close"
+            class="shrink-0 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer text-xl leading-none">&times;</button>
+        </div>
+      </dialog>
     <% end %>
   </div>
 

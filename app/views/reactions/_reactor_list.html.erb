@@ -1,0 +1,13 @@
+<h2 class="font-bold text-lg mb-3 text-stone-800 dark:text-stone-100"><%= emoji %> reactions</h2>
+<% if reactors.any? %>
+  <ul class="space-y-2">
+    <% reactors.each do |user| %>
+      <li class="flex items-center gap-2">
+        <%= avatar_tag user, size: 32, css_class: "w-6 h-6 text-xs" %>
+        <span class="text-sm text-stone-700 dark:text-stone-200"><%= user.username %></span>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="text-sm text-stone-400 dark:text-stone-500">No one has reacted with this emoji.</p>
+<% end %>

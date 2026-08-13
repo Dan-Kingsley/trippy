@@ -28,7 +28,9 @@ Rails.application.routes.draw do
     resources :trip_entries, path: "entries", except: %i[ index ] do
       resources :photos, only: %i[ create destroy update ]
       resources :comments, only: %i[ create destroy ]
-      resources :reactions, only: %i[ create destroy ]
+      resources :reactions, only: %i[ create destroy ] do
+        collection { get :users }
+      end
     end
   end
 

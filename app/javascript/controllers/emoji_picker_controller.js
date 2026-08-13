@@ -3,8 +3,11 @@ import "emoji-picker-element"
 
 // Toggles an <emoji-picker> popover and submits the chosen emoji as a
 // reaction, letting people react with any emoji rather than a curated set.
+// A custom "Recent" tab (backed by the server-rendered recentPanelTarget)
+// sits alongside the library's own "All" picker, since emoji-picker-element
+// has no public API for adding a first-class category tab of our own.
 export default class extends Controller {
-  static targets = ["popover", "picker", "form", "input"]
+  static targets = ["popover", "picker", "form", "input", "recentTab", "allTab", "recentPanel", "allPanel"]
 
   connect() {
     this.closeOnOutsideClick = (event) => {
@@ -23,6 +26,31 @@ export default class extends Controller {
       this.pickerTarget.classList.toggle("dark", document.documentElement.classList.contains("dark"))
     }
     this.popoverTarget.classList.toggle("hidden")
+  }
+
+  showRecent() {
+    this.recentPanelTarget.classList.remove("hidden")
+    this.allPanelTarget.classList.add("hidden")
+    this.setActiveTab(this.recentTabTarget, this.allTabTarget)
+  }
+
+  showAll() {
+    this.allPanelTarget.classList.remove("hidden")
+    this.recentPanelTarget.classList.add("hidden")
+    this.setActiveTab(this.allTabTarget, this.recentTabTarget)
+  }
+
+  setActiveTab(active, inactive) {
+    active.classList.add("text-amber-700", "dark:text-amber-400", "border-b-2", "border-amber-600")
+    active.classList.remove("text-stone-500", "dark:text-stone-400")
+    inactive.classList.remove("text-amber-700", "dark:text-amber-400", "border-b-2", "border-amber-600")
+    inactive.classList.add("text-stone-500", "dark:text-stone-400")
+  }
+
+  selectRecent(event) {
+    this.inputTarget.value = event.currentTarget.dataset.emoji
+    this.close()
+    this.formTarget.requestSubmit()
   }
 
   select(event) {

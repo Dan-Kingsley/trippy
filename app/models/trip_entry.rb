@@ -37,15 +37,24 @@ class TripEntry < ApplicationRecord
     update!(updates) if updates.any?
   end
 
+  SUGGESTION_SLOTS = 6
+
   def reaction_counts
     reactions.group(:emoji).count
   end
 
-  # The quick-pick emoji always show up first (even unused), followed by any
-  # custom emoji people have actually reacted with, most popular first.
-  def displayed_reaction_emojis
-    extra = reaction_counts.keys - Reaction::QUICK_EMOJI
-    Reaction::QUICK_EMOJI + extra.sort_by { |emoji| -reaction_counts[emoji] }
+  # Emoji actually used on this entry come first, most-reacted first. Any
+  # remaining slots (up to SUGGESTION_SLOTS total) are filled with unused
+  # emoji suggestions - the user's own recently-used emoji take priority,
+  # falling back to the default quick-pick set.
+  def displayed_reaction_emojis(user: nil)
+    used = reaction_counts.keys.sort_by { |emoji| -reaction_counts[emoji] }
+    slots = [ SUGGESTION_SLOTS - used.size, 0 ].max
+    return used if slots.zero?
+
+    recent = user ? user.recent_emojis(limit: SUGGESTION_SLOTS) : []
+    suggested = (recent + Reaction::QUICK_EMOJI).uniq - used
+    used + suggested.first(slots)
   end
 
   # Everyone whose face should show on this entry: whoever created it, plus
