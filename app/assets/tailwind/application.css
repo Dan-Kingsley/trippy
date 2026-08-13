@@ -55,19 +55,6 @@
   border: none;
   pointer-events: none;
 }
-.trip-map-arrow > div {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  color: #b45309;
-  font-size: 14px;
-  text-shadow: 0 0 3px white, 0 0 3px white;
-}
-.dark .trip-map-arrow > div {
-  text-shadow: 0 0 3px #1c1917, 0 0 3px #1c1917;
-}
 
 input[type="datetime-local"] {
   color-scheme: light;
