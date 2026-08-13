@@ -15,9 +15,9 @@
       <div data-carousel-target="track" data-action="scroll->carousel#onScroll" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar">
         <% @entry.photos.each do |photo| %>
           <div class="snap-center shrink-0 w-full aspect-[4/3] sm:aspect-[16/9]">
-            <%= image_tag photo.image.variant(resize_to_limit: [ 1600, 1600 ], saver: { quality: 85 }),
+            <%= image_tag photo.image.variant(:thumb),
                   class: "w-full h-full object-contain cursor-zoom-in",
-                  data: { action: "click->carousel#open", full_src: url_for(photo.image.variant(resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 })) } %>
+                  data: { action: "click->carousel#open", full_src: url_for(photo.image.variant(:full)) } %>
           </div>
         <% end %>
       </div>
