@@ -1,6 +1,6 @@
 <% content_for :title, "#{@entry.title} - #{@trip.title} - Trippy" %>
 
-<%= link_to "&larr; #{@trip.title}".html_safe, trip_path(@trip), class: "text-sm text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400 mb-4 inline-block" %>
+<%= link_to "&larr; #{@trip.title}".html_safe, trip_path(@trip), class: "inline-flex items-center gap-1 rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium mb-4" %>
 
 <% if @editable %>
   <div class="flex gap-2 mb-4">
@@ -8,7 +8,7 @@
   </div>
 <% end %>
 
-<div data-controller="carousel" data-action="keydown@window->carousel#onKeydown" tabindex="0"
+<div data-controller="carousel" data-action="keydown@window->carousel#onKeydown" tabindex="0" autofocus
   class="rounded-xl focus:outline-2 focus:outline-amber-600 focus:outline-offset-2">
   <% if @entry.photos.any? %>
     <div class="relative rounded-xl overflow-hidden bg-stone-200 dark:bg-stone-800">
