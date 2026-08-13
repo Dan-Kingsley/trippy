@@ -46,6 +46,7 @@
         <%= link_to "Add entry", new_trip_trip_entry_path(@trip), class: "rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium" %>
       <% end %>
       <%= link_to "Edit trip", edit_trip_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
+      <%= link_to "Export", trip_export_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
     </div>
   <% end %>
 </div>

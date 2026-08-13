@@ -25,11 +25,15 @@
   <div class="flex items-end gap-3">
     <div class="flex-1 min-w-0">
       <%= form.label :photos, "Add more photos", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
-      <input type="file" name="photos[]" multiple accept="image/*" class="block w-full max-w-full text-sm"
+      <label for="more_entry_photos" class="inline-flex items-center gap-2 rounded-md px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium cursor-pointer">
+        📷 <span data-photo-date-target="fileCount">Choose photos</span>
+      </label>
+      <input type="file" id="more_entry_photos" name="photos[]" multiple accept="image/*" class="sr-only"
              data-photo-date-target="input" data-action="change->photo-date#preview">
     </div>
-    <%= form.submit "Upload", class: "shrink-0 rounded-md px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium cursor-pointer" %>
+    <%= form.submit "Upload", class: "shrink-0 rounded-md px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
   </div>
+  <p class="text-xs text-stone-400 mt-1">You can also paste an image from your clipboard anywhere in this form.</p>
   <p data-photo-date-target="status" class="hidden text-xs mt-1 text-amber-700 dark:text-amber-400"></p>
 <% end %>
 

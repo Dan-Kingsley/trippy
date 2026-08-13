@@ -8,10 +8,48 @@ import { Controller } from "@hotwired/stimulus"
 // "manually set" toggle is checked for them so they don't have to find it
 // themselves - checking is a nudge, never automatic, and never un-checked.
 export default class extends Controller {
-  static targets = [ "input", "status", "timeCheckbox", "locationCheckbox" ]
+  static targets = [ "input", "status", "timeCheckbox", "locationCheckbox", "fileCount" ]
+
+  connect() {
+    this.onPaste = this.onPaste.bind(this)
+    this.element.addEventListener("paste", this.onPaste)
+    this.defaultFileCountText = this.hasFileCountTarget ? this.fileCountTarget.textContent : null
+  }
+
+  disconnect() {
+    this.element.removeEventListener("paste", this.onPaste)
+  }
+
+  // Lets adventurers paste a screenshot or copied image straight into the
+  // form instead of having to save it and re-select it as a file - merges
+  // pasted images in with whatever's already selected, then feeds the same
+  // file input through the normal change->preview pipeline.
+  onPaste(event) {
+    const images = [ ...event.clipboardData?.items || [] ]
+      .filter((item) => item.type.startsWith("image/"))
+      .map((item) => item.getAsFile())
+      .filter(Boolean)
+
+    if (images.length === 0) return
+    event.preventDefault()
+
+    const combined = new DataTransfer()
+    for (const file of this.inputTarget.files) combined.items.add(file)
+    images.forEach((file, i) => combined.items.add(new File([ file ], file.name || `pasted-image-${Date.now()}-${i}.png`, { type: file.type })))
+
+    this.inputTarget.files = combined.files
+    this.inputTarget.dispatchEvent(new Event("change", { bubbles: true }))
+  }
 
   async preview() {
     const files = [ ...this.inputTarget.files ]
+
+    if (this.hasFileCountTarget) {
+      this.fileCountTarget.textContent = files.length === 0
+        ? this.defaultFileCountText
+        : `${files.length} photo${files.length === 1 ? "" : "s"} selected`
+    }
+
     if (files.length === 0) {
       this.statusTarget.classList.add("hidden")
       return
