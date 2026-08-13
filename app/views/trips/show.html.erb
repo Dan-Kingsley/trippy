@@ -92,7 +92,7 @@
 <section class="mt-8">
   <h2 class="font-semibold text-xl mb-3 text-stone-800 dark:text-stone-100">Entries</h2>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    <% @entries.each do |entry| %>
+    <% @entries.to_a.reverse.each do |entry| %>
       <%= link_to trip_trip_entry_path(@trip, entry), class: "flex gap-3 items-center rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-3 hover:shadow-md transition-shadow" do %>
         <div class="relative shrink-0">
           <% if entry.photos.first %>

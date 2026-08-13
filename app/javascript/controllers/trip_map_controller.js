@@ -7,6 +7,7 @@ const LINE_OPACITY = 0.75
 const CURVE_STEPS_PER_SEGMENT = 24 // vertices sampled along each entry-to-entry great-circle arc
 const ARROW_ARM_LENGTH = LINE_WEIGHT * 4
 const ARROW_HALF_ANGLE_DEGREES = 25
+const BASE_PANE_Z_INDEX = 401 // just above the overlay-pane (400), and below every built-in Leaflet pane
 
 // Renders a Leaflet/OpenStreetMap map with one circular photo marker per
 // located trip entry, connected in chronological order by a translucent
@@ -16,6 +17,14 @@ const ARROW_HALF_ANGLE_DEGREES = 25
 // east/west (Leaflet's default), so the markers/route are redrawn on every
 // repeated "world copy" currently in view rather than just the one they
 // were originally placed on - see #renderWorldCopies.
+//
+// Entries arrive pre-sorted oldest-to-newest. Rather than leaning on
+// Leaflet's default marker stacking (which is based on on-screen pixel
+// position), each entry and each connecting leg gets its own dedicated pane
+// with an explicit z-index, so stacking always reflects chronology instead
+// of screen geometry: later entries render above earlier ones, and each
+// leg's line/arrow renders directly beneath the older of the two entries it
+// connects - see #createPanes.
 export default class extends Controller {
   static values = { entries: Array }
 
@@ -41,8 +50,8 @@ export default class extends Controller {
     // world" and strand the markers on opposite edges of the screen.
     this.entries = located
     this.latLngs = this.unwrapAntimeridian(located.map((e) => [ e.lat, e.lng ]))
-    this.curvePoints = this.buildCurve(this.latLngs)
-    this.segments = this.buildSegments(this.latLngs)
+    this.legs = this.buildLegs(this.latLngs)
+    this.createPanes()
     this.worldCopies = new Map()
 
     // Capped below their "natural" zoom so the initial view stays more
@@ -96,16 +105,19 @@ export default class extends Controller {
   buildWorldCopy(shift) {
     const layer = L.layerGroup()
 
-    if (this.curvePoints.length > 1) {
-      const shiftedCurve = this.curvePoints.map(([ lat, lng ]) => [ lat, lng + shift ])
-      L.polyline(shiftedCurve, { color: LINE_COLOR, weight: LINE_WEIGHT, opacity: LINE_OPACITY }).addTo(layer)
-    }
+    this.legs.forEach((leg, i) => {
+      const pane = this.legPaneNames[i]
 
-    this.segments.forEach(({ lat, lng, bearing }) => {
-      L.marker([ lat, lng + shift ], {
-        icon: this.buildArrowIcon(bearing),
+      if (leg.curve.length > 1) {
+        const shiftedCurve = leg.curve.map(([ lat, lng ]) => [ lat, lng + shift ])
+        L.polyline(shiftedCurve, { color: LINE_COLOR, weight: LINE_WEIGHT, opacity: LINE_OPACITY, pane }).addTo(layer)
+      }
+
+      L.marker([ leg.arrow.lat, leg.arrow.lng + shift ], {
+        icon: this.buildArrowIcon(leg.arrow.bearing),
         interactive: false,
-        keyboard: false
+        keyboard: false,
+        pane
       }).addTo(layer)
     })
 
@@ -117,10 +129,34 @@ export default class extends Controller {
         iconSize: [ 48, 48 ],
         iconAnchor: [ 24, 24 ]
       })
-      L.marker(shiftedEntries[i], { icon, title: entry.title }).addTo(layer)
+      L.marker(shiftedEntries[i], { icon, title: entry.title, pane: this.entryPaneNames[i] }).addTo(layer)
     })
 
     return layer
+  }
+
+  // One dedicated Leaflet pane per entry and per connecting leg, so stacking
+  // order is driven entirely by explicit z-index rather than Leaflet's
+  // default (on-screen pixel position). Interleaved bottom-to-top as:
+  // leg(0,1), entry 0, leg(1,2), entry 1, leg(2,3), entry 2, ..., entry N-1
+  // - each leg sits directly beneath the older of the two entries it joins,
+  // and every entry outranks every entry before it.
+  createPanes() {
+    this.legPaneNames = []
+    this.entryPaneNames = []
+
+    let z = BASE_PANE_Z_INDEX
+    this.entries.forEach((_, i) => {
+      if (i < this.legs.length) {
+        const legPane = `trip-map-leg-pane-${i}`
+        this.map.createPane(legPane).style.zIndex = z++
+        this.legPaneNames.push(legPane)
+      }
+
+      const entryPane = `trip-map-entry-pane-${i}`
+      this.map.createPane(entryPane).style.zIndex = z++
+      this.entryPaneNames.push(entryPane)
+    })
   }
 
   // A two-stroke chevron (matching the route line's color, width and
@@ -148,14 +184,15 @@ export default class extends Controller {
     })
   }
 
-  // One directional arrow per consecutive pair of entries, placed exactly on
-  // the great-circle route at that leg's midpoint (t=0.5 along #slerp, which
-  // is also one of the vertices #buildCurve samples - so it can't drift off
-  // the rendered line the way a plain lat/lng average could) and rotated to
-  // the route's tangent bearing there, pointing from the older entry toward
-  // the newer one.
-  buildSegments(latLngs) {
-    const segments = []
+  // One entry per consecutive pair of entries, each carrying its own
+  // great-circle curve (so it can be drawn as its own polyline, in its own
+  // pane) plus a directional arrow placed exactly on that curve at its
+  // midpoint (t=0.5 along #slerp, which is also one of the vertices
+  // #buildCurve samples - so it can't drift off the rendered line the way a
+  // plain lat/lng average could) and rotated to the route's tangent bearing
+  // there, pointing from the older entry toward the newer one.
+  buildLegs(latLngs) {
+    const legs = []
     for (let i = 1; i < latLngs.length; i++) {
       const p1 = latLngs[i - 1]
       const p2 = latLngs[i]
@@ -167,17 +204,16 @@ export default class extends Controller {
       // bearing isn't generally the same as its midpoint bearing.
       const before = this.slerp(p1, p2, 0.49)
       const after = this.slerp(p1, p2, 0.51)
+      const bearing = this.bearingBetween(before[0], before[1], after[0], after[1])
 
-      segments.push({ lat, lng, bearing: this.bearingBetween(before[0], before[1], after[0], after[1]) })
+      legs.push({ curve: this.buildCurve([ p1, p2 ]), arrow: { lat, lng, bearing } })
     }
-    return segments
+    return legs
   }
 
-  // Samples each entry-to-entry leg as a great-circle arc (via #slerp)
-  // rather than a straight lat/lng line, so the route drawn on the map
-  // curves the way it actually would over the Earth's surface. Points are
-  // concatenated leg by leg (skipping each leg's start, since it's the same
-  // point as the previous leg's end) into one continuous curve.
+  // Samples an entry-to-entry leg as a great-circle arc (via #slerp) rather
+  // than a straight lat/lng line, so the route drawn on the map curves the
+  // way it actually would over the Earth's surface.
   buildCurve(latLngs) {
     const points = [ latLngs[0] ]
     for (let i = 1; i < latLngs.length; i++) {
