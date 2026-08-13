@@ -39,8 +39,8 @@
   <% end %>
 
   <div data-carousel-target="lightbox" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 touch-none"
-       data-action="click->carousel#close touchstart->carousel#onTouchStart touchmove->carousel#onTouchMove touchend->carousel#onTouchEnd">
-    <img data-carousel-target="lightboxImage" class="max-w-full max-h-full object-contain touch-none" src="">
+       data-action="click->carousel#close touchstart->carousel#onTouchStart touchmove->carousel#onTouchMove touchend->carousel#onTouchEnd wheel->carousel#onWheel:!passive mousedown->carousel#onMouseDown mousemove@window->carousel#onMouseMove mouseup@window->carousel#onMouseUp">
+    <img data-carousel-target="lightboxImage" class="max-w-full max-h-full object-contain touch-none active:cursor-grabbing" src="">
 
     <% if @entry.photos.size > 1 %>
       <button type="button" data-action="carousel#prev" aria-label="Previous photo"
