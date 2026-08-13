@@ -1,17 +1,24 @@
-<%= link_to trip_path(trip), class: "group block rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:shadow-lg transition-shadow" do %>
-  <div class="aspect-[3/2] overflow-hidden">
-    <%= trip_thumbnail_tag trip, css_class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
-  </div>
-  <div class="p-4">
-    <h3 class="font-semibold text-lg text-stone-800 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400"><%= trip.title %></h3>
-    <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
-      <%= pluralize(trip.trip_entries.size, "entry") %>
-      <% unless trip.public? %> &middot; <span class="inline-flex items-center gap-1">🔒 Private</span><% end %>
-    </p>
-    <div class="flex -space-x-2 mt-2">
-      <% trip.editors.each do |user| %>
-        <%= avatar_tag user, size: 48, css_class: "w-6 h-6 text-[10px] ring-2 ring-white dark:ring-stone-900" %>
-      <% end %>
+<div class="relative">
+  <%= link_to trip_path(trip), class: "group block rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:shadow-lg transition-shadow" do %>
+    <div class="aspect-[3/2] overflow-hidden">
+      <%= trip_thumbnail_tag trip, css_class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
     </div>
-  </div>
-<% end %>
+    <div class="p-4">
+      <h3 class="font-semibold text-lg text-stone-800 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400"><%= trip.title %></h3>
+      <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
+        <%= pluralize(trip.trip_entries.size, "entry") %>
+        <% unless trip.public? %> &middot; <span class="inline-flex items-center gap-1">🔒 Private</span><% end %>
+      </p>
+      <div class="flex -space-x-2 mt-2">
+        <% trip.editors.each do |user| %>
+          <%= avatar_tag user, size: 48, css_class: "w-6 h-6 text-[10px] ring-2 ring-white dark:ring-stone-900" %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if Current.user %>
+    <%= render "trips/favorite_button", trip: trip,
+          css_class: "absolute top-2 right-2 rounded-full w-9 h-9 flex items-center justify-center text-lg bg-black/40 hover:bg-black/60 cursor-pointer #{trip.favorited_by?(Current.user) ? 'text-amber-400' : 'text-white'}" %>
+  <% end %>
+</div>

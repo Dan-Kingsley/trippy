@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_060540) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_13_101723) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -49,6 +49,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_060540) do
     t.index ["parent_id"], name: "index_comments_on_parent_id"
     t.index ["trip_entry_id"], name: "index_comments_on_trip_entry_id"
     t.index ["user_id"], name: "index_comments_on_user_id"
+  end
+
+  create_table "favorites", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "trip_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["trip_id", "user_id"], name: "index_favorites_on_trip_id_and_user_id", unique: true
+    t.index ["trip_id"], name: "index_favorites_on_trip_id"
+    t.index ["user_id"], name: "index_favorites_on_user_id"
   end
 
   create_table "photos", force: :cascade do |t|
@@ -147,6 +157,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_060540) do
 
   create_table "trips", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.integer "favorites_count", default: 0, null: false
     t.integer "owner_id", null: false
     t.boolean "public", default: false, null: false
     t.string "secret_code", null: false
@@ -173,6 +184,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_060540) do
   add_foreign_key "comments", "comments", column: "parent_id"
   add_foreign_key "comments", "trip_entries"
   add_foreign_key "comments", "users"
+  add_foreign_key "favorites", "trips"
+  add_foreign_key "favorites", "users"
   add_foreign_key "photos", "trip_entries"
   add_foreign_key "photos", "users", column: "uploaded_by_id"
   add_foreign_key "reactions", "trip_entries"

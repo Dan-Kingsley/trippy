@@ -11,6 +11,8 @@ class User < ApplicationRecord
   has_many :photos, foreign_key: :uploaded_by_id, dependent: :nullify, inverse_of: :uploaded_by
   has_many :comments, dependent: :destroy
   has_many :reactions, dependent: :destroy
+  has_many :favorites, dependent: :destroy
+  has_many :favorite_trips, through: :favorites, source: :trip
 
   normalizes :username, with: ->(value) { value.strip.downcase }
 

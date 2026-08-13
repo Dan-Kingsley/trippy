@@ -14,7 +14,7 @@ class TripEntriesController < ApplicationController
   end
 
   def new
-    @entry = @trip.trip_entries.new
+    @entry = @trip.trip_entries.new(occurred_at: Time.current)
   end
 
   def create

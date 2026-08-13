@@ -6,6 +6,13 @@ class HomeController < ApplicationController
       private_trip_ids |= Current.user.trips.pluck(:id)
     end
 
-    @trips = Trip.where(public: true).or(Trip.where(id: private_trip_ids)).ordered_by_latest_entry
+    accessible = Trip.where(public: true).or(Trip.where(id: private_trip_ids))
+
+    # Anonymous visitors have nothing to favourite, so they always see "all".
+    # Signed-in users default to "favourites" unless they've switched tabs.
+    @tab = Current.user && params[:tab] != "all" ? "favourites" : "all"
+    accessible = accessible.where(id: Current.user.favorite_trips.select(:id)) if @tab == "favourites"
+
+    @trips = accessible.ordered_by_latest_entry
   end
 end

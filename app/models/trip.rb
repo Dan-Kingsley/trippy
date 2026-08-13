@@ -7,6 +7,8 @@ class Trip < ApplicationRecord
   has_many :collaborators, through: :trip_collaborators, source: :user
   has_many :trip_accesses, dependent: :destroy
   has_many :trip_entries, -> { order(:occurred_at) }, dependent: :destroy
+  has_many :favorites, dependent: :destroy
+  has_many :favorited_by, through: :favorites, source: :user
   has_one_attached :cover_photo
 
   validates :title, presence: true
@@ -27,6 +29,10 @@ class Trip < ApplicationRecord
 
   def editors
     User.where(id: [ owner_id, *collaborator_ids ])
+  end
+
+  def favorited_by?(user)
+    user && favorites.exists?(user_id: user.id)
   end
 
   def cover_image

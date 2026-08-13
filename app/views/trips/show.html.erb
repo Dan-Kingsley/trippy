@@ -16,9 +16,13 @@
     </div>
   </div>
 
-  <% if @editable %>
-    <div class="flex gap-2 shrink-0">
-      <% if @trip_member && !@trip.public? %>
+  <div class="flex gap-2 shrink-0">
+    <% if Current.user %>
+      <%= render "trips/favorite_button", trip: @trip %>
+    <% end %>
+
+    <% if @editable %>
+      <% if @trip_member %>
         <div data-controller="modal">
           <button type="button" data-action="modal#open" class="rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium cursor-pointer">Share</button>
 
@@ -29,9 +33,15 @@
                 <button type="button" data-action="modal#close" aria-label="Close"
                   class="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer text-xl leading-none">&times;</button>
               </div>
-              <p class="text-sm text-stone-500 dark:text-stone-400 mb-2">Share this link so others can view without logging in:</p>
+              <p class="text-sm text-stone-500 dark:text-stone-400 mb-2">
+                <% if @trip.public? %>
+                  Share this link so anyone can view this trip:
+                <% else %>
+                  Share this link so others can view without logging in:
+                <% end %>
+              </p>
               <div class="flex gap-2" data-controller="clipboard">
-                <input type="text" readonly value="<%= trip_url(@trip, code: @trip.secret_code) %>"
+                <input type="text" readonly value="<%= @trip.public? ? trip_url(@trip) : trip_url(@trip, code: @trip.secret_code) %>"
                   data-clipboard-target="source"
                   class="flex-1 min-w-0 rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 text-sm break-all focus:outline-2 focus:outline-amber-600"
                   onclick="this.select()">
@@ -47,8 +57,8 @@
       <% end %>
       <%= link_to "Edit trip", edit_trip_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
       <%= link_to "Export", trip_export_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
 </div>
 
 <div
@@ -99,6 +109,7 @@
             <%= entry.occurred_at&.to_date&.strftime("%-d %b %Y") %>
             <% if @trip_member %>
               &middot; <%= pluralize(entry.views_count, "view") %>
+              &middot; <%= pluralize(@trip.favorites_count, "favourite") %>
             <% end %>
           </p>
         </div>

@@ -22,6 +22,7 @@ Rails.application.routes.draw do
 
   resources :trips, param: :slug do
     resource :export, only: %i[ show ], controller: "exports"
+    resource :favorite, only: %i[ create destroy ]
     resources :collaborators, only: %i[ create destroy ], controller: "trip_collaborators"
 
     resources :trip_entries, path: "entries", except: %i[ index ] do

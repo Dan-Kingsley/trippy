@@ -32,6 +32,7 @@ export default class extends Controller {
     // world" and strand the markers on opposite edges of the screen.
     this.entries = located
     this.latLngs = this.unwrapAntimeridian(located.map((e) => [ e.lat, e.lng ]))
+    this.segments = this.buildSegments(this.latLngs)
     this.worldCopies = new Map()
 
     // Capped below their "natural" zoom so the initial view stays more
@@ -90,6 +91,16 @@ export default class extends Controller {
       L.polyline(shifted, { color: "#b45309", weight: 3, opacity: 0.75 }).addTo(layer)
     }
 
+    this.segments.forEach(({ lat, lng, bearing }) => {
+      const icon = L.divIcon({
+        className: "trip-map-arrow",
+        html: `<div style="transform: rotate(${bearing}deg)">&#9650;</div>`,
+        iconSize: [ 18, 18 ],
+        iconAnchor: [ 9, 9 ]
+      })
+      L.marker([ lat, lng + shift ], { icon, interactive: false, keyboard: false }).addTo(layer)
+    })
+
     this.entries.forEach((entry, i) => {
       const icon = L.divIcon({
         className: "trip-map-marker",
@@ -101,6 +112,41 @@ export default class extends Controller {
     })
 
     return layer
+  }
+
+  // One directional arrow per consecutive pair of entries, placed at the
+  // midpoint of that segment and rotated to point from the older entry
+  // toward the newer one - showing at a glance which way the trip travelled.
+  // Built once from the unwrapped (antimeridian-corrected) lat/lngs and then
+  // reused, shifted by each world copy's offset, in buildWorldCopy.
+  buildSegments(latLngs) {
+    const segments = []
+    for (let i = 1; i < latLngs.length; i++) {
+      const [ lat1, lng1 ] = latLngs[i - 1]
+      const [ lat2, lng2 ] = latLngs[i]
+      segments.push({
+        lat: (lat1 + lat2) / 2,
+        lng: (lng1 + lng2) / 2,
+        bearing: this.bearingBetween(lat1, lng1, lat2, lng2)
+      })
+    }
+    return segments
+  }
+
+  // Initial compass bearing (0deg = north, 90deg = east) from one point to
+  // another, used to rotate the arrow icon - which points north/up at 0deg -
+  // to face the direction of travel.
+  bearingBetween(lat1, lng1, lat2, lng2) {
+    const toRad = (deg) => (deg * Math.PI) / 180
+    const toDeg = (rad) => (rad * 180) / Math.PI
+    const phi1 = toRad(lat1)
+    const phi2 = toRad(lat2)
+    const deltaLng = toRad(lng2 - lng1)
+
+    const y = Math.sin(deltaLng) * Math.cos(phi2)
+    const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLng)
+
+    return (toDeg(Math.atan2(y, x)) + 360) % 360
   }
 
   // Leaflet treats lat/lngs as plain numbers, so a trip that crosses the
