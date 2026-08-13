@@ -28,6 +28,12 @@ class User < ApplicationRecord
     admin? || trip.owner_id == id || trip.collaborators.exists?(id: id)
   end
 
+  # Unlike can_edit?, excludes admins: only the trip's own owner/collaborators
+  # may add new entries, since admins moderate rather than author content.
+  def can_add_entries?(trip)
+    trip.owner_id == id || trip.collaborators.exists?(id: id)
+  end
+
   private
     def bootstrap_first_user_as_admin
       if User.count.zero?

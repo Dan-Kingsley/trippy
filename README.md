@@ -51,3 +51,7 @@ bin/dev
 ```
 
 `bin/dev` runs the Rails server and the Tailwind watcher together.
+
+## License
+
+Licensed under the [GNU General Public License v3.0](LICENSE).

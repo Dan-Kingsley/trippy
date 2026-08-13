@@ -23,6 +23,7 @@ class TripsController < ApplicationController
       tagged_collaborators: { profile_picture_attachment: :blob }
     )
     @editable = Current.user&.can_edit?(@trip) || false
+    @can_add_entries = Current.user&.can_add_entries?(@trip) || false
     @trip_member = Current.user && @trip.editors.exists?(id: Current.user.id)
   end
 

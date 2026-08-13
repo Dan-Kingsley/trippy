@@ -2,7 +2,8 @@ class TripEntriesController < ApplicationController
   before_action :set_trip
   before_action :require_view_access, only: %i[ show ]
   before_action :require_authentication, except: %i[ show ]
-  before_action :require_editor, except: %i[ show ]
+  before_action :require_entry_creator, only: %i[ new create ]
+  before_action :require_editor, only: %i[ edit update destroy ]
   before_action :set_entry, only: %i[ show edit update destroy ]
 
   def show
@@ -63,6 +64,12 @@ class TripEntriesController < ApplicationController
     def require_editor
       unless performed? || Current.user.can_edit?(@trip)
         redirect_to trip_path(@trip), alert: "You don't have edit access to this trip."
+      end
+    end
+
+    def require_entry_creator
+      unless performed? || Current.user.can_add_entries?(@trip)
+        redirect_to trip_path(@trip), alert: "You don't have access to add entries to this trip."
       end
     end
 
