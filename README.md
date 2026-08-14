@@ -11,8 +11,10 @@ account required.
   32-character code, shareable as a link — no login needed to view).
 - **Viewers** can create a free account to comment and react with emoji on
   entries.
-- Two adventurers can collaborate on the same trip; entries and photos are
+- Multiple adventurers can collaborate on the same trip; entries and photos are
   tagged with who created/uploaded them.
+
+![Trippy example screenshot](example-screenshot.png)
 
 ## Running with Docker Compose
 
