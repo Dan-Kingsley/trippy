@@ -1,12 +1,12 @@
 <% content_for :title, "#{@entry.title} - #{@trip.title} - Trippy" %>
 
-<%= link_to "&larr; #{@trip.title}".html_safe, trip_path(@trip), class: "inline-flex items-center gap-1 rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium mb-4" %>
+<div class="flex items-center justify-between mb-4">
+  <%= link_to "&larr; #{@trip.title}".html_safe, trip_path(@trip), class: "inline-flex items-center gap-1 rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium" %>
 
-<% if @editable %>
-  <div class="flex gap-2 mb-4">
-    <%= link_to "Edit entry", edit_trip_trip_entry_path(@trip, @entry), class: "rounded-md px-3 py-1.5 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
-  </div>
-<% end %>
+  <% if @editable %>
+    <%= link_to "Edit entry", edit_trip_trip_entry_path(@trip, @entry), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
+  <% end %>
+</div>
 
 <div data-controller="carousel" data-action="keydown@window->carousel#onKeydown" tabindex="0" autofocus
   class="rounded-xl focus:outline-2 focus:outline-amber-600 focus:outline-offset-2">

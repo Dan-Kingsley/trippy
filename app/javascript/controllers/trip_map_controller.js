@@ -31,7 +31,7 @@ export default class extends Controller {
   connect() {
     const located = this.entriesValue.filter((e) => e.lat != null && e.lng != null)
 
-    this.map = L.map(this.element, { scrollWheelZoom: false })
+    this.map = L.map(this.element, { scrollWheelZoom: true })
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19
