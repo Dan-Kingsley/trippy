@@ -58,7 +58,6 @@
                 <%= avatar_tag Current.user, size: 48, css_class: "w-6 h-6 text-[10px]" %>
                 <span class="hidden md:inline"><%= Current.user.username %></span>
               <% end %>
-              <%= button_to "Sign out", session_path, method: :delete, class: "whitespace-nowrap rounded-md px-2 sm:px-3 py-1.5 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 cursor-pointer" %>
             </div>
           <% else %>
             <div class="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">

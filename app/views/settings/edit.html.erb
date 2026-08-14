@@ -79,4 +79,8 @@
       <% end %>
     </div>
   <% end %>
+
+  <div class="border-t border-stone-200 dark:border-stone-800 pt-5 mt-5">
+    <%= button_to "Sign out", session_path, method: :delete, class: "rounded-md px-4 py-2.5 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium cursor-pointer" %>
+  </div>
 </div>
