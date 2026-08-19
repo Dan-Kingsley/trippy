@@ -40,6 +40,15 @@ class Trip < ApplicationRecord
     trip_entries.first&.photos&.first&.image
   end
 
+  # The span the trip actually covers, based on when its entries happened
+  # rather than when they were logged - nil if there are no dated entries yet.
+  def entry_date_range
+    first = trip_entries.minimum(:occurred_at)
+    return nil unless first
+
+    [ first, trip_entries.maximum(:occurred_at) ]
+  end
+
   private
     # Regenerates the slug (and so the trip's URL) whenever the title changes,
     # not just on creation, so the URL always reflects the current name.

@@ -1,0 +1,19 @@
+<% others = trip.editors.where.not(id: exclude_user_id).order(:username) %>
+<% if others.any? %>
+  <div>
+    <p class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1">Who else was there?</p>
+    <div class="space-y-1.5">
+      <% others.each do |user| %>
+        <label class="flex items-center gap-2 text-sm text-stone-700 dark:text-stone-200">
+          <%= check_box_tag "trip_entry[tagged_collaborator_ids][]", user.id,
+                entry.tagged_collaborator_ids.include?(user.id),
+                id: "tagged_collaborator_#{user.id}",
+                class: "rounded border-stone-300 dark:border-stone-700 text-amber-700" %>
+          <%= avatar_tag user, size: 40, css_class: "w-6 h-6 text-[10px]" %>
+          <%= user.username %>
+        </label>
+      <% end %>
+    </div>
+    <input type="hidden" name="trip_entry[tagged_collaborator_ids][]" value="">
+  </div>
+<% end %>

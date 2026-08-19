@@ -40,6 +40,8 @@
 
   <%= render "location_field", form: form, entry: @entry %>
 
+  <%= render "who_else_field", trip: @trip, entry: @entry, exclude_user_id: Current.user.id %>
+
   <div data-controller="toggle">
     <div class="flex items-center gap-2">
       <%= form.check_box :manual_time, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700",

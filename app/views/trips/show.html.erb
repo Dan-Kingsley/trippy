@@ -19,16 +19,46 @@
     </div>
   </div>
 
-  <div class="flex gap-2 shrink-0">
+  <div class="flex items-center gap-2 shrink-0">
     <% if Current.user %>
       <%= render "trips/favorite_button", trip: @trip %>
     <% end %>
 
     <% if @editable %>
-      <% if @trip_member %>
-        <div data-controller="modal">
-          <button type="button" data-action="modal#open" class="rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium cursor-pointer">Share</button>
+      <div data-controller="modal" class="contents">
+        <!-- Actions row: full buttons from sm: up, collapsed into a hamburger menu below it -->
+        <div class="hidden sm:flex gap-2">
+          <% if @trip_member %>
+            <button type="button" data-action="modal#open" class="rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium cursor-pointer">Share</button>
+          <% end %>
+          <% if @can_add_entries %>
+            <%= link_to "Add entry", new_trip_trip_entry_path(@trip), class: "rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium" %>
+          <% end %>
+          <%= link_to "Edit trip", edit_trip_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
+          <%= link_to "Export", trip_export_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
+        </div>
 
+        <div class="relative sm:hidden" data-controller="menu">
+          <button type="button" data-action="menu#toggle" aria-label="Trip actions" aria-haspopup="true"
+            class="rounded-md w-10 h-10 flex items-center justify-center bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+              <path fill-rule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 5A.75.75 0 0 1 2.75 9h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 9.75Zm0 5A.75.75 0 0 1 2.75 14h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          <div data-menu-target="panel" class="hidden absolute right-0 z-10 mt-1 w-44 rounded-lg shadow-lg overflow-hidden bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex flex-col py-1">
+            <% if @trip_member %>
+              <button type="button" data-action="modal#open menu#close" class="text-left px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer">Share</button>
+            <% end %>
+            <% if @can_add_entries %>
+              <%= link_to "Add entry", new_trip_trip_entry_path(@trip), class: "px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800" %>
+            <% end %>
+            <%= link_to "Edit trip", edit_trip_path(@trip), class: "px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800" %>
+            <%= link_to "Export", trip_export_path(@trip), class: "px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800" %>
+          </div>
+        </div>
+
+        <% if @trip_member %>
           <dialog data-modal-target="dialog" class="m-auto rounded-xl p-0 border-0 backdrop:bg-black/50 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100 w-full max-w-md">
             <div class="p-5">
               <div class="flex items-center justify-between mb-3">
@@ -53,13 +83,8 @@
               </div>
             </div>
           </dialog>
-        </div>
-      <% end %>
-      <% if @can_add_entries %>
-        <%= link_to "Add entry", new_trip_trip_entry_path(@trip), class: "rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium" %>
-      <% end %>
-      <%= link_to "Edit trip", edit_trip_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
-      <%= link_to "Export", trip_export_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
+        <% end %>
+      </div>
     <% end %>
   </div>
 </div>

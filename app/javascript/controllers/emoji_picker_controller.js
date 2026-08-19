@@ -22,10 +22,33 @@ export default class extends Controller {
 
   toggle(event) {
     event.stopPropagation()
-    if (this.popoverTarget.classList.contains("hidden")) {
+    const opening = this.popoverTarget.classList.contains("hidden")
+    if (opening) {
       this.pickerTarget.classList.toggle("dark", document.documentElement.classList.contains("dark"))
     }
     this.popoverTarget.classList.toggle("hidden")
+    if (opening) this.reposition()
+  }
+
+  // The popover is anchored `left: 0` relative to its trigger by default,
+  // which overflows off-screen on narrow/mobile viewports when the trigger
+  // sits mid-row. Shift it left/right just enough to stay within the
+  // viewport, with a small margin on each side.
+  reposition() {
+    const popover = this.popoverTarget
+    const margin = 8
+
+    popover.style.left = "0px"
+    const rect = popover.getBoundingClientRect()
+
+    let shift = 0
+    if (rect.right > window.innerWidth - margin) {
+      shift = rect.right - (window.innerWidth - margin)
+    }
+    if (rect.left - shift < margin) {
+      shift = rect.left - margin
+    }
+    popover.style.left = `${-shift}px`
   }
 
   showRecent() {

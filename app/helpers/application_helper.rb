@@ -34,6 +34,24 @@ module ApplicationHelper
     end
   end
 
+  # Formats a trip's entry date span, e.g. "12-18 Jan 2026", collapsing to a
+  # single date when a trip's entries all happened on the same day.
+  def trip_date_range_text(trip)
+    range = trip.entry_date_range
+    return nil unless range
+
+    first, last = range.map(&:to_date)
+    return first.strftime("%-d %b %Y") if first == last
+
+    if first.year == last.year && first.month == last.month
+      "#{first.strftime('%-d')}-#{last.strftime('%-d %b %Y')}"
+    elsif first.year == last.year
+      "#{first.strftime('%-d %b')} - #{last.strftime('%-d %b %Y')}"
+    else
+      "#{first.strftime('%-d %b %Y')} - #{last.strftime('%-d %b %Y')}"
+    end
+  end
+
   def render_markdown(text)
     return "" if text.blank?
     renderer = Redcarpet::Render::HTML.new(filter_html: true, safe_links_only: true)
