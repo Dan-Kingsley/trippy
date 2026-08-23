@@ -41,5 +41,11 @@ module Trippy
 
     config.active_storage.variant_processor = :vips
     config.time_zone = "UTC"
+
+    # Serve attachments directly through the app instead of redirecting to a
+    # separately-expiring signed storage URL - one fewer network hop (which
+    # matters on patchy mobile connections) and no more possibility of that
+    # redirect's short-lived URL expiring before the browser follows it.
+    config.active_storage.resolve_model_to_route = :rails_storage_proxy
   end
 end

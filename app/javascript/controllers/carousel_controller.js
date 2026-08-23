@@ -4,35 +4,44 @@ const MIN_SCALE = 1
 const MAX_SCALE = 4
 const KEYBOARD_ZOOM_STEP = 0.75
 const WHEEL_ZOOM_SPEED = 0.0025
-const SWIPE_THRESHOLD = 40
 
-// Horizontal swipeable photo carousel with dot indicators and a fullscreen
-// lightbox. Both the inline carousel's prev/next buttons and the lightbox
-// loop from the last photo back to the first (and vice versa), and stay in
-// sync with each other so closing the lightbox leaves the carousel on the
-// same photo. In the lightbox, arrow keys and touch swipes move between
-// photos, and tapping/clicking the far left or right 10% of the screen
-// steps back/forward - the on-screen arrows there only reveal on hover
-// over those edges (see the group-hover classes in the view). Pinch (or
-// ArrowUp/ArrowDown) zooms into the current lightbox photo, anchored to
-// the pinch midpoint so it zooms into wherever the fingers are rather than
-// always the image center, and dragging with one finger pans around while
-// zoomed in; lifting one finger mid-pinch hands off to a single-finger pan
-// using the remaining finger rather than requiring a fresh touch. Zoom
-// always resets when the photo changes or the lightbox closes, and a
-// single tap still closes the lightbox as usual. The inline carousel
-// (lightbox closed) also responds to ArrowLeft/ArrowRight while it has
-// keyboard focus. The mouse wheel zooms in/out centered on the cursor
+// Horizontal swipeable photo/video carousel with dot indicators and a
+// fullscreen lightbox. The inline carousel's prev/next buttons, dots, swipe,
+// and ArrowLeft/ArrowRight (while it has keyboard focus) move between
+// slides - but once the lightbox is open, the user is "clicked in" to that
+// one photo/video and none of that navigation is available; the only way to
+// see another one is to close the lightbox and click into it from the
+// inline carousel.
+//
+// Photos: pinch (or ArrowUp/ArrowDown) zooms into the lightbox photo,
+// anchored to the pinch midpoint so it zooms into wherever the fingers are
+// rather than always the image center, and dragging with one finger pans
+// around while zoomed in; lifting one finger mid-pinch hands off to a
+// single-finger pan using the remaining finger rather than requiring a
+// fresh touch. The mouse wheel zooms in/out centered on the cursor
 // position, and once zoomed in, click-and-drag pans the image; a drag is
-// not treated as a click so it doesn't also close the lightbox.
+// not treated as a click so it doesn't also close the lightbox. Zoom always
+// resets when the lightbox closes.
+//
+// Videos: shown inline as a poster frame with a play icon overlay and never
+// autoplay there. Opening one into the lightbox loads it and plays it
+// automatically once ready (this is not "inline autoplay" - it's the direct
+// result of the click that opened it) with a bottom scrubber to seek; it
+// doesn't autoplay again if reopened, and ending playback swaps the icon to
+// a restart button. Clicking the video itself (anywhere but that icon or
+// the scrubber) closes the lightbox exactly like clicking a photo does.
 export default class extends Controller {
-  static targets = [ "track", "dot", "lightbox", "lightboxImage" ]
+  static targets = [
+    "track", "dot", "lightbox", "lightboxImage",
+    "lightboxVideoWrap", "lightboxVideo", "videoIcon", "scrubberWrap", "scrubber", "currentTime", "duration"
+  ]
 
   connect() {
     this.index = 0
     this.scale = MIN_SCALE
     this.translateX = 0
     this.translateY = 0
+    this.kind = "image"
   }
 
   get count() {
@@ -66,7 +75,6 @@ export default class extends Controller {
 
   setIndex(index, { scrollTrack = true, instant = false } = {}) {
     this.index = ((index % this.count) + this.count) % this.count
-    this.resetZoom()
 
     if (scrollTrack) {
       this.trackTarget.scrollTo({ left: this.index * this.trackTarget.clientWidth, behavior: instant ? "auto" : "smooth" })
@@ -76,21 +84,28 @@ export default class extends Controller {
       dot.classList.toggle("bg-white", i === this.index)
       dot.classList.toggle("bg-white/40", i !== this.index)
     })
-
-    if (!this.lightboxTarget.classList.contains("hidden")) this.updateLightboxImage()
-  }
-
-  updateLightboxImage() {
-    const image = this.trackTarget.children[this.index]?.querySelector("img")
-    if (image) this.lightboxImageTarget.src = image.dataset.fullSrc
   }
 
   open(event) {
-    const index = [ ...this.trackTarget.children ].findIndex((slide) => slide.contains(event.currentTarget))
+    const slide = this.trackTarget.children[
+      [ ...this.trackTarget.children ].findIndex((s) => s.contains(event.currentTarget))
+    ]
+    const index = [ ...this.trackTarget.children ].indexOf(slide)
     if (index !== -1) this.index = index
 
+    this.kind = slide?.dataset.kind || "image"
     this.resetZoom()
-    this.updateLightboxImage()
+
+    if (this.kind === "video") {
+      this.lightboxImageTarget.classList.add("hidden")
+      this.lightboxVideoWrapTarget.classList.remove("hidden")
+      this.openVideo(slide.dataset.videoSrc)
+    } else {
+      this.lightboxVideoWrapTarget.classList.add("hidden")
+      this.lightboxImageTarget.classList.remove("hidden")
+      this.lightboxImageTarget.src = slide.dataset.fullSrc
+    }
+
     this.lightboxTarget.classList.remove("hidden")
     document.body.classList.add("overflow-hidden")
   }
@@ -104,8 +119,83 @@ export default class extends Controller {
     this.lightboxTarget.classList.add("hidden")
     this.lightboxImageTarget.src = ""
     this.resetZoom()
+    if (this.kind === "video") this.closeVideo()
     document.body.classList.remove("overflow-hidden")
   }
+
+  // --- Video -----------------------------------------------------------
+
+  openVideo(src) {
+    this.autoplayedThisOpen = false
+    this.videoIconTarget.classList.add("hidden")
+    this.scrubberWrapTarget.classList.add("hidden")
+    this.scrubberTarget.value = 0
+    this.currentTimeTarget.textContent = "0:00"
+    this.durationTarget.textContent = "0:00"
+
+    this.lightboxVideoTarget.src = src
+    this.lightboxVideoTarget.load()
+  }
+
+  closeVideo() {
+    this.lightboxVideoTarget.pause()
+    this.lightboxVideoTarget.removeAttribute("src")
+    this.lightboxVideoTarget.load()
+  }
+
+  // Plays automatically the first time this open()'s video is ready -
+  // triggered by the click that opened the lightbox, not inline autoplay.
+  onVideoCanPlay() {
+    if (this.autoplayedThisOpen) return
+    this.autoplayedThisOpen = true
+    this.lightboxVideoTarget.play()
+  }
+
+  onVideoLoadedMetadata() {
+    this.scrubberTarget.max = this.lightboxVideoTarget.duration || 0
+    this.durationTarget.textContent = this.formatTime(this.lightboxVideoTarget.duration)
+    this.scrubberWrapTarget.classList.remove("hidden")
+  }
+
+  onVideoPlay() {
+    this.videoIconTarget.classList.add("hidden")
+  }
+
+  onVideoEnded() {
+    this.videoIconTarget.classList.remove("hidden")
+  }
+
+  onVideoTimeUpdate() {
+    if (this.scrubbing) return
+    this.scrubberTarget.value = this.lightboxVideoTarget.currentTime
+    this.currentTimeTarget.textContent = this.formatTime(this.lightboxVideoTarget.currentTime)
+  }
+
+  // The restart button shown once a video ends - visually the same play
+  // icon, but here it always means "start over" since it only appears then.
+  restartVideo(event) {
+    event.stopPropagation()
+    this.lightboxVideoTarget.currentTime = 0
+    this.lightboxVideoTarget.play()
+  }
+
+  seek(event) {
+    event.stopPropagation()
+    this.lightboxVideoTarget.currentTime = Number(event.target.value)
+    this.currentTimeTarget.textContent = this.formatTime(this.lightboxVideoTarget.currentTime)
+  }
+
+  stopPropagation(event) {
+    event.stopPropagation()
+  }
+
+  formatTime(seconds) {
+    if (!Number.isFinite(seconds)) return "0:00"
+    const total = Math.max(0, Math.round(seconds))
+    return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`
+  }
+
+  // --- Photo zoom/pan (images only) -------------------------------------
 
   onKeydown(event) {
     if (event.key === "Escape") {
@@ -116,8 +206,8 @@ export default class extends Controller {
     const lightboxOpen = !this.lightboxTarget.classList.contains("hidden")
 
     if (lightboxOpen) {
-      if (event.key === "ArrowLeft") { event.preventDefault(); this.step(-1) }
-      if (event.key === "ArrowRight") { event.preventDefault(); this.step(1) }
+      // No prev/next while clicked in - only zoom (photos) and Escape apply.
+      if (this.kind !== "image") return
       if (event.key === "ArrowUp") { event.preventDefault(); this.applyZoom(this.scale + KEYBOARD_ZOOM_STEP) }
       if (event.key === "ArrowDown") { event.preventDefault(); this.applyZoom(this.scale - KEYBOARD_ZOOM_STEP) }
       return
@@ -128,13 +218,15 @@ export default class extends Controller {
     if (event.key === "ArrowRight") { event.preventDefault(); this.step(1) }
   }
 
-  // A single finger starts either a swipe (not zoomed) or a pan (zoomed in).
-  // A second finger arriving mid-touch fires its own touchstart with both
-  // touches present, which is how we detect the start of a pinch.
+  // A single finger pans (when zoomed in) - no swipe-to-navigate here, since
+  // the lightbox these touch handlers belong to disables navigation while
+  // open. A second finger arriving mid-touch fires its own touchstart with
+  // both touches present, which is how we detect the start of a pinch.
   onTouchStart(event) {
+    if (this.kind !== "image") return
+
     if (event.touches.length === 2) {
       this.pinching = true
-      this.touchStartX = null
       this.pinchStartDistance = this.touchDistance(event.touches)
       this.pinchStartScale = this.scale
       this.pinchStartTranslateX = this.translateX
@@ -158,12 +250,12 @@ export default class extends Controller {
         translateX: this.translateX,
         translateY: this.translateY
       }
-    } else {
-      this.touchStartX = event.touches[0].clientX
     }
   }
 
   onTouchMove(event) {
+    if (this.kind !== "image") return
+
     if (this.pinching && event.touches.length === 2) {
       event.preventDefault()
 
@@ -194,6 +286,8 @@ export default class extends Controller {
   }
 
   onTouchEnd(event) {
+    if (this.kind !== "image") return
+
     if (this.pinching) {
       // A second finger lifting off a pinch fires its own touchend while one
       // finger remains down - hand off to a single-finger pan from here
@@ -218,16 +312,7 @@ export default class extends Controller {
 
     if (this.panStart) {
       this.panStart = null
-      return
     }
-
-    if (this.touchStartX == null) return
-
-    const dx = event.changedTouches[0].clientX - this.touchStartX
-    this.touchStartX = null
-    if (Math.abs(dx) < SWIPE_THRESHOLD) return
-
-    this.step(dx < 0 ? 1 : -1)
   }
 
   touchDistance(touches) {
@@ -242,6 +327,7 @@ export default class extends Controller {
   }
 
   onWheel(event) {
+    if (this.kind !== "image") return
     event.preventDefault()
 
     const oldScale = this.scale
@@ -261,7 +347,7 @@ export default class extends Controller {
   }
 
   onMouseDown(event) {
-    if (this.scale <= MIN_SCALE) return
+    if (this.kind !== "image" || this.scale <= MIN_SCALE) return
 
     event.preventDefault()
     this.dragging = true

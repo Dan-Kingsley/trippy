@@ -15,7 +15,7 @@ module Importing
     MAX_ENTRY_UNCOMPRESSED_BYTES = 100.megabytes
     MAX_COMPRESSION_RATIO = 100
 
-    ALLOWED_IMAGE_CONTENT_TYPES = %w[ image/jpeg image/png image/webp image/heic image/heif ]
+    ALLOWED_IMAGE_CONTENT_TYPES = MediaContentTypes::IMAGES
 
     SAFE_ENTRY_NAME = %r{\A(manifest\.json|trips/\d+/(cover_photo\.[A-Za-z0-9]+|entries/\d+/photos/\d+\.[A-Za-z0-9]+))\z}
 

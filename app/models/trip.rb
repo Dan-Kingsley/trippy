@@ -1,7 +1,9 @@
 class Trip < ApplicationRecord
   SECRET_CODE_LENGTH = 32
+  COVER_SOURCES = %w[ auto upload photo ]
 
   belongs_to :owner, class_name: "User"
+  belongs_to :cover_photo_record, class_name: "Photo", foreign_key: :cover_photo_id, optional: true
 
   has_many :trip_collaborators, dependent: :destroy
   has_many :collaborators, through: :trip_collaborators, source: :user
@@ -9,9 +11,13 @@ class Trip < ApplicationRecord
   has_many :trip_entries, -> { order(:occurred_at) }, dependent: :destroy
   has_many :favorites, dependent: :destroy
   has_many :favorited_by, through: :favorites, source: :user
-  has_one_attached :cover_photo
+  has_one_attached :cover_photo do |attachable|
+    attachable.variant :thumb, resize_to_fill: [ 600, 400 ], saver: { quality: 80 }
+  end
 
   validates :title, presence: true
+  validates :cover_source, inclusion: { in: COVER_SOURCES }
+  validate :acceptable_cover_photo_content_type
 
   before_validation :assign_slug
   before_validation :assign_secret_code, on: :create
@@ -35,9 +41,26 @@ class Trip < ApplicationRecord
     user && favorites.exists?(user_id: user.id)
   end
 
+  # Every photo across this trip's entries, most recently uploaded first -
+  # used to let an adventurer pick one as the trip's cover image.
+  def photos
+    Photo.where(trip_entry_id: trip_entries.select(:id)).order(created_at: :desc)
+  end
+
+  # Three ways to pick a trip's cover image: an explicitly uploaded photo, an
+  # existing photo picked from one of the trip's own entries, or (the
+  # default) automatically the most recent entry's first photo. Each mode
+  # falls back to "auto" if its chosen source turns out to be unusable
+  # (upload removed, picked photo deleted), rather than showing nothing.
   def cover_image
-    return cover_photo if cover_photo.attached?
-    trip_entries.first&.photos&.first&.image
+    case cover_source
+    when "upload"
+      cover_photo.attached? ? cover_photo : auto_cover_image
+    when "photo"
+      cover_photo_record&.image&.attached? ? cover_photo_record.image : auto_cover_image
+    else
+      auto_cover_image
+    end
   end
 
   # The span the trip actually covers, based on when its entries happened
@@ -78,5 +101,18 @@ class Trip < ApplicationRecord
           break
         end
       end
+    end
+
+    def acceptable_cover_photo_content_type
+      return unless cover_photo.attached?
+      return if cover_photo.content_type.in?(MediaContentTypes::IMAGES)
+
+      errors.add(:cover_photo, "must be a supported photo format")
+    end
+
+    # trip_entries is ordered ascending by occurred_at, so the latest entry
+    # is the last one, not the first.
+    def auto_cover_image
+      trip_entries.last&.photos&.first&.image
     end
 end

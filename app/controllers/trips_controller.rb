@@ -36,6 +36,7 @@ class TripsController < ApplicationController
     @trip.owner = Current.user
 
     if @trip.save
+      CoverPhotoVariantJob.perform_later(@trip.id) if trip_params[:cover_photo].present?
       redirect_to trip_path(@trip), notice: "Trip created. Start adding entries!"
     else
       render :new, status: :unprocessable_entity
@@ -47,6 +48,7 @@ class TripsController < ApplicationController
 
   def update
     if @trip.update(trip_params)
+      CoverPhotoVariantJob.perform_later(@trip.id) if trip_params[:cover_photo].present?
       redirect_to trip_path(@trip), notice: "Trip updated."
     else
       render :edit, status: :unprocessable_entity
@@ -78,6 +80,17 @@ class TripsController < ApplicationController
     end
 
     def trip_params
-      params.require(:trip).permit(:title, :public, :cover_photo)
+      params.require(:trip).permit(:title, :public, :cover_photo, :cover_source)
+        .merge(cover_photo_id: allowed_cover_photo_id)
+    end
+
+    # Scopes the pickable "cover photo" to photos that actually belong to
+    # this trip's own entries, so a tampered request can't point the cover
+    # at another trip's (possibly private) photo.
+    def allowed_cover_photo_id
+      requested = params.dig(:trip, :cover_photo_id)
+      return nil if requested.blank?
+
+      Photo.joins(:trip_entry).where(trip_entries: { trip_id: @trip&.id }).where(id: requested).pick(:id)
     end
 end

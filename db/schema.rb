@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_13_101723) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_23_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -156,6 +156,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101723) do
   end
 
   create_table "trips", force: :cascade do |t|
+    t.integer "cover_photo_id"
+    t.string "cover_source", default: "auto", null: false
     t.datetime "created_at", null: false
     t.integer "favorites_count", default: 0, null: false
     t.integer "owner_id", null: false
@@ -164,6 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101723) do
     t.string "slug", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["cover_photo_id"], name: "index_trips_on_cover_photo_id"
     t.index ["owner_id"], name: "index_trips_on_owner_id"
     t.index ["secret_code"], name: "index_trips_on_secret_code", unique: true
     t.index ["slug"], name: "index_trips_on_slug", unique: true
@@ -201,5 +204,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101723) do
   add_foreign_key "trip_entry_collaborators", "users"
   add_foreign_key "trip_entry_views", "trip_entries"
   add_foreign_key "trip_entry_views", "users"
+  add_foreign_key "trips", "photos", column: "cover_photo_id", on_delete: :nullify
   add_foreign_key "trips", "users", column: "owner_id"
 end

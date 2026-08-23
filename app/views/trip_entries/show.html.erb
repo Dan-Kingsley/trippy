@@ -14,11 +14,23 @@
     <div class="relative rounded-xl overflow-hidden bg-stone-200 dark:bg-stone-800">
       <div data-carousel-target="track" data-action="scroll->carousel#onScroll" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar">
         <% @entry.photos.each do |photo| %>
-          <div class="snap-center shrink-0 w-full aspect-[4/3] sm:aspect-[16/9]">
-            <%= image_tag photo.image.variant(:thumb),
-                  class: "w-full h-full object-contain cursor-zoom-in",
-                  data: { action: "click->carousel#open", full_src: url_for(photo.image.variant(:full)) } %>
-          </div>
+          <% if photo.video? %>
+            <div class="snap-center shrink-0 w-full aspect-[4/3] sm:aspect-[16/9] relative cursor-zoom-in"
+                 data-action="click->carousel#open" data-kind="video" data-video-src="<%= url_for(photo.image) %>">
+              <%= image_tag photo.image.preview(resize_to_limit: [ 1600, 1600 ]),
+                    class: "w-full h-full object-contain", loading: "lazy",
+                    data: { attachment_fallback: true, fallback_class: "w-full h-full object-contain",
+                            fallback_content: "🎬" } %>
+              <%= video_play_icon(size: "w-14 h-14 text-2xl") %>
+            </div>
+          <% else %>
+            <div class="snap-center shrink-0 w-full aspect-[4/3] sm:aspect-[16/9] cursor-zoom-in"
+                 data-action="click->carousel#open" data-kind="image" data-full-src="<%= url_for(photo.image.variant(:full)) %>">
+              <%= image_tag photo.image.variant(:thumb),
+                    class: "w-full h-full object-contain",
+                    data: { attachment_fallback: true, fallback_class: "w-full h-full object-contain" } %>
+            </div>
+          <% end %>
         <% end %>
       </div>
 
@@ -42,16 +54,21 @@
        data-action="click->carousel#close touchstart->carousel#onTouchStart touchmove->carousel#onTouchMove touchend->carousel#onTouchEnd wheel->carousel#onWheel:!passive mousedown->carousel#onMouseDown mousemove@window->carousel#onMouseMove mouseup@window->carousel#onMouseUp">
     <img data-carousel-target="lightboxImage" class="max-w-full max-h-full object-contain touch-none active:cursor-grabbing" src="">
 
-    <% if @entry.photos.size > 1 %>
-      <button type="button" data-action="carousel#prev" aria-label="Previous photo"
-        class="group absolute inset-y-0 left-0 w-[10%] flex items-center justify-start pl-2 cursor-pointer">
-        <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 group-hover:bg-black/60 text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl leading-none">&#8249;</span>
-      </button>
-      <button type="button" data-action="carousel#next" aria-label="Next photo"
-        class="group absolute inset-y-0 right-0 w-[10%] flex items-center justify-end pr-2 cursor-pointer">
-        <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 group-hover:bg-black/60 text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl leading-none">&#8250;</span>
-      </button>
-    <% end %>
+    <div data-carousel-target="lightboxVideoWrap" class="hidden absolute inset-4 flex items-center justify-center">
+      <video data-carousel-target="lightboxVideo" class="max-w-full max-h-full touch-auto" playsinline
+        data-action="canplay->carousel#onVideoCanPlay loadedmetadata->carousel#onVideoLoadedMetadata play->carousel#onVideoPlay ended->carousel#onVideoEnded timeupdate->carousel#onVideoTimeUpdate"></video>
+
+      <button type="button" data-carousel-target="videoIcon" data-action="click->carousel#restartVideo" aria-label="Restart video"
+        class="hidden absolute w-16 h-16 rounded-full bg-black/50 hover:bg-black/60 text-white flex items-center justify-center text-3xl leading-none cursor-pointer">&#9658;</button>
+
+      <div data-carousel-target="scrubberWrap" data-action="click->carousel#stopPropagation"
+        class="hidden absolute bottom-0 left-0 right-0 flex items-center gap-2 px-2 pb-1">
+        <span data-carousel-target="currentTime" class="text-white text-xs tabular-nums w-9 text-right">0:00</span>
+        <input type="range" min="0" step="0.1" value="0" data-carousel-target="scrubber"
+          data-action="input->carousel#seek" class="flex-1 touch-auto accent-amber-600 cursor-pointer">
+        <span data-carousel-target="duration" class="text-white text-xs tabular-nums w-9">0:00</span>
+      </div>
+    </div>
   </div>
 </div>
 

@@ -98,7 +98,7 @@
         lng: e.longitude,
         title: e.title,
         url: trip_trip_entry_path(@trip, e),
-        thumbnail_url: (e.photos.first&.image&.attached? ? url_for(e.photos.first.image.variant(resize_to_fill: [96, 96])) : nil)
+        thumbnail_url: map_thumbnail_url(e.photos.first)
       }
     }.to_json %>"
   class="w-full h-[50vh] sm:h-[60vh] rounded-xl border border-stone-200 dark:border-stone-800 z-0"

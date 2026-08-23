@@ -1,6 +1,12 @@
 class User < ApplicationRecord
   has_secure_password
-  has_one_attached :profile_picture
+  has_one_attached :profile_picture do |attachable|
+    # A single prewarmed size, reused (and scaled down by the browser) at
+    # every display size the app renders avatars at - keeps the number of
+    # variants that can fail to process down to one per user, rather than
+    # one per distinct `size:` an avatar_tag call site happens to pass.
+    attachable.variant :thumb, resize_to_fill: [ 128, 128 ], saver: { quality: 80 }
+  end
   has_many :sessions, dependent: :destroy
 
   has_many :owned_trips, class_name: "Trip", foreign_key: :owner_id, dependent: :destroy
@@ -19,6 +25,7 @@ class User < ApplicationRecord
   validates :username, presence: true, uniqueness: true,
     format: { with: /\A[a-z0-9_.-]+\z/, message: "can only contain letters, numbers, dots, dashes and underscores" }
   validates :password, length: { minimum: 8 }, allow_nil: true
+  validate :acceptable_profile_picture_content_type
 
   before_create :bootstrap_first_user_as_admin
 
@@ -48,5 +55,12 @@ class User < ApplicationRecord
         self.admin = true
         self.adventurer = true
       end
+    end
+
+    def acceptable_profile_picture_content_type
+      return unless profile_picture.attached?
+      return if profile_picture.content_type.in?(MediaContentTypes::IMAGES)
+
+      errors.add(:profile_picture, "must be a supported photo format")
     end
 end

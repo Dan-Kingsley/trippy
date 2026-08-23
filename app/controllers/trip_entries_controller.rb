@@ -1,4 +1,6 @@
 class TripEntriesController < ApplicationController
+  include PhotoUploadable
+
   before_action :set_trip
   before_action :require_view_access, only: %i[ show ]
   before_action :require_authentication, except: %i[ show ]
@@ -22,8 +24,10 @@ class TripEntriesController < ApplicationController
     @entry.created_by = Current.user
 
     if @entry.save
-      attach_photos(@entry)
-      redirect_to trip_path(@trip), notice: "Entry added."
+      rejected = attach_uploads(@entry)
+      notice = rejected.positive? ? nil : "Entry added."
+      alert = rejected.positive? ? "Entry added, but #{rejected} #{'file'.pluralize(rejected)} couldn't be attached - only photo and video files are supported." : nil
+      redirect_to trip_path(@trip), notice: notice, alert: alert
     else
       render :new, status: :unprocessable_entity
     end
@@ -34,8 +38,10 @@ class TripEntriesController < ApplicationController
 
   def update
     if @entry.update(entry_params)
-      attach_photos(@entry)
-      redirect_to trip_path(@trip), notice: "Entry updated."
+      rejected = attach_uploads(@entry)
+      notice = rejected.positive? ? nil : "Entry updated."
+      alert = rejected.positive? ? "Entry updated, but #{rejected} #{'file'.pluralize(rejected)} couldn't be attached - only photo and video files are supported." : nil
+      redirect_to trip_path(@trip), notice: notice, alert: alert
     else
       render :edit, status: :unprocessable_entity
     end
@@ -103,12 +109,5 @@ class TripEntriesController < ApplicationController
     def allowed_tagged_collaborator_ids
       requested = Array(params.dig(:trip_entry, :tagged_collaborator_ids))
       @trip.editors.where(id: requested).ids
-    end
-
-    def attach_photos(entry)
-      Array(params[:photos]).each_with_index do |file, index|
-        next if file.blank?
-        entry.photos.create!(uploaded_by: Current.user, position: entry.photos.count + index, image: file)
-      end
     end
 end

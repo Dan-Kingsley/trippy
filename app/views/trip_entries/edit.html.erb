@@ -21,20 +21,22 @@
   </section>
 <% end %>
 
-<%= form_with url: trip_trip_entry_photos_path(@trip, @entry), method: :post, multipart: true, class: "mb-8 max-w-lg", data: { controller: "photo-date" } do |form| %>
+<%= form_with url: trip_trip_entry_photos_path(@trip, @entry), method: :post, multipart: true, class: "mb-8 max-w-lg",
+      data: { controller: "photo-date", photo_date_direct_upload_url_value: rails_direct_uploads_path } do |form| %>
   <div class="flex items-end gap-3">
     <div class="flex-1 min-w-0">
-      <%= form.label :photos, "Add more photos", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+      <%= form.label :photos, "Add more photos or videos", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
       <label for="more_entry_photos" class="inline-flex items-center gap-2 rounded-md px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium cursor-pointer">
-        📷 <span data-photo-date-target="fileCount">Choose photos</span>
+        📷 <span data-photo-date-target="fileCount">Choose photos or videos</span>
       </label>
-      <input type="file" id="more_entry_photos" name="photos[]" multiple accept="image/*" class="sr-only"
+      <input type="file" id="more_entry_photos" name="photos[]" multiple accept="image/*,video/*" class="sr-only"
              data-photo-date-target="input" data-action="change->photo-date#preview">
     </div>
-    <%= form.submit "Upload", class: "shrink-0 rounded-md px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
+    <%= form.submit "Upload", data: { photo_date_target: "submit" }, class: "shrink-0 rounded-md px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
   </div>
   <p class="text-xs text-stone-400 mt-1">You can also paste an image from your clipboard anywhere in this form.</p>
   <p data-photo-date-target="status" class="hidden text-xs mt-1 text-amber-700 dark:text-amber-400"></p>
+  <div data-photo-date-target="uploadList" class="hidden mt-2 space-y-1"></div>
 <% end %>
 
 <%= form_with model: @entry, url: trip_trip_entry_path(@trip, @entry), class: "space-y-6 max-w-lg" do |form| %>
@@ -67,11 +69,14 @@
       <%= form.check_box :manual_time, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700", data: { action: "toggle#sync" } %>
       <%= form.label :manual_time, "Manually set date & time", class: "text-sm text-stone-600 dark:text-stone-300" %>
     </div>
-    <div data-toggle-target="revealable" class="hidden mt-2" data-controller="now">
+    <div data-toggle-target="revealable" class="hidden mt-2" data-controller="datetime-picker">
+      <%= form.hidden_field :occurred_at, data: { datetime_picker_target: "hidden" } %>
       <div class="flex gap-2">
-        <%= form.datetime_field :occurred_at, data: { now_target: "input" },
-              class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2" %>
-        <button type="button" data-action="now#set"
+        <input type="date" data-datetime-picker-target="date" data-action="input->datetime-picker#combine"
+          class="rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2">
+        <input type="time" data-datetime-picker-target="time" data-action="input->datetime-picker#combine"
+          class="rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2">
+        <button type="button" data-action="datetime-picker#setNow"
           class="shrink-0 rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium cursor-pointer">Now</button>
       </div>
       <p class="text-xs text-stone-400 mt-1">Used to order entries chronologically. Defaults to the upload time if no photo date is found. Only visible to you.</p>

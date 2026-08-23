@@ -5,17 +5,32 @@ class Photo < ApplicationRecord
   has_one_attached :image do |attachable|
     # Shown everywhere a photo appears inline (carousel, feeds, etc.) -
     # kept small so pages stay snappy. Only the lightbox loads :full.
+    # These only apply to image content; videos are previewed instead (see
+    # PhotoVariantJob).
     attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }
     attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }
   end
+
+  validate :acceptable_content_type
 
   after_create_commit :extract_exif_later
   after_create_commit :prewarm_variants_later
   after_destroy_commit :recompute_entry_later
 
+  def video?
+    image.attached? && image.content_type.start_with?("video/")
+  end
+
   private
+    def acceptable_content_type
+      return unless image.attached?
+      return if image.content_type.in?(MediaContentTypes::ALL)
+
+      errors.add(:image, "must be a supported photo or video format")
+    end
+
     def extract_exif_later
-      ExifExtractionJob.perform_later(id)
+      ExifExtractionJob.perform_later(id) unless video?
     end
 
     def prewarm_variants_later

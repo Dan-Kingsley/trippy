@@ -8,7 +8,7 @@
   </div>
 <% end %>
 
-<%= form_with model: trip, url: url, class: "space-y-5 max-w-lg" do |form| %>
+<%= form_with model: trip, url: url, class: "space-y-5 max-w-lg", data: { controller: "direct-upload" } do |form| %>
   <div>
     <%= form.label :title, class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
     <%= form.text_field :title, required: true, autofocus: true,
@@ -20,11 +20,47 @@
     <%= form.label :public, "Public (listed on the homepage for everyone)", class: "text-sm text-stone-600 dark:text-stone-300" %>
   </div>
 
-  <div>
-    <%= form.label :cover_photo, "Cover photo (optional)", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
-    <%= form.file_field :cover_photo, accept: "image/*", class: "block w-full text-sm" %>
-    <p class="text-xs text-stone-400 mt-1">If left blank, the first entry's first photo is used as the trip's thumbnail.</p>
+  <% trip_photos = trip.persisted? ? trip.photos.reject(&:video?) : [] %>
+  <div data-controller="radio-toggle" data-action="change->radio-toggle#sync">
+    <p class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1">Cover photo</p>
+    <div class="space-y-3">
+      <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
+        <%= form.radio_button :cover_source, "auto", class: "border-stone-300 dark:border-stone-700 text-amber-700" %>
+        Automatic &mdash; the latest entry's photo
+      </label>
+
+      <% if trip_photos.any? %>
+        <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
+          <%= form.radio_button :cover_source, "photo", class: "border-stone-300 dark:border-stone-700 text-amber-700" %>
+          Choose one of this trip's photos
+        </label>
+        <div data-radio-toggle-target="panel" data-radio-toggle-value="photo" class="hidden grid grid-cols-4 sm:grid-cols-6 gap-2">
+          <% trip_photos.each do |photo| %>
+            <label class="relative cursor-pointer">
+              <%= form.radio_button :cover_photo_id, photo.id, class: "peer sr-only" %>
+              <%= photo_thumb_tag photo, size: 96,
+                    css_class: "w-full aspect-square rounded-md object-cover border-2 border-transparent peer-checked:border-amber-600" %>
+            </label>
+          <% end %>
+        </div>
+      <% end %>
+
+      <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
+        <%= form.radio_button :cover_source, "upload", class: "border-stone-300 dark:border-stone-700 text-amber-700" %>
+        Upload a new photo
+      </label>
+      <div data-radio-toggle-target="panel" data-radio-toggle-value="upload" class="hidden">
+        <%= form.file_field :cover_photo, accept: "image/*", direct_upload: true, class: "block w-full text-sm",
+              data: { action: "direct-upload:initialize->direct-upload#start direct-upload:progress->direct-upload#progress direct-upload:error->direct-upload#error direct-upload:end->direct-upload#end" } %>
+        <div data-direct-upload-target="progressWrap" class="hidden mt-2 h-1.5 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden">
+          <div data-direct-upload-target="progressBar" class="h-full bg-amber-600 transition-all" style="width: 0%"></div>
+        </div>
+        <p data-direct-upload-target="error" class="hidden text-xs text-red-600 dark:text-red-400 mt-1"></p>
+      </div>
+    </div>
   </div>
 
-  <%= form.submit (trip.persisted? ? "Save changes" : "Create trip"), class: "rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
+  <%= form.submit (trip.persisted? ? "Save changes" : "Create trip"),
+        data: { direct_upload_target: "submit" },
+        class: "rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
 <% end %>

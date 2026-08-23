@@ -24,8 +24,23 @@ export default class extends Controller {
     // If this map starts out visible (location already manually set), it's
     // measured the instant it's created, which can race the browser's layout
     // of the surrounding page and leave it sized/positioned incorrectly.
-    // Re-measuring on the next frame settles it either way.
+    // Re-measuring on the next frame is a cheap first correction...
     requestAnimationFrame(() => this.map.invalidateSize())
+
+    // ...but the real fix: watch the container's actual size. This catches
+    // every case a one-shot rAF can miss - whichever order "toggle" and
+    // "location-picker" happen to connect in, later layout shifts (web
+    // fonts loading, etc.), or the container going from display:none to
+    // visible well after connect() already ran. Any observed size change
+    // re-measures and re-centers the map on its current geographic center,
+    // which is what actually fixes the "map rendered offset up-and-left,
+    // only the bottom-right corner visible" symptom of Leaflet having
+    // measured a zero/wrong-sized container.
+    this.resizeObserver = new ResizeObserver(() => {
+      this.map.invalidateSize()
+      this.map.setView(this.map.getCenter(), this.map.getZoom(), { animate: false })
+    })
+    this.resizeObserver.observe(this.mapTarget)
 
     // With no real (photo/manual) location yet, nudge the starting view
     // towards roughly where the adventurer is, via their IP, instead of the
@@ -66,6 +81,7 @@ export default class extends Controller {
 
   disconnect() {
     this.awaitingIpGuess = false
+    this.resizeObserver?.disconnect()
     this.map?.remove()
   }
 }

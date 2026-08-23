@@ -1,14 +1,19 @@
 class PhotosController < ApplicationController
+  include PhotoUploadable
+
   before_action :require_authentication
   before_action :set_trip_and_entry
   before_action :require_editor
 
   def create
-    Array(params[:photos]).each_with_index do |file, index|
-      next if file.blank?
-      @entry.photos.create!(uploaded_by: Current.user, position: @entry.photos.count + index, image: file)
+    rejected = attach_uploads(@entry)
+
+    if rejected.positive?
+      redirect_to edit_trip_trip_entry_path(@trip, @entry),
+        alert: "#{rejected} #{'file'.pluralize(rejected)} couldn't be added - only photo and video files are supported."
+    else
+      redirect_to edit_trip_trip_entry_path(@trip, @entry), notice: "Photos added."
     end
-    redirect_to edit_trip_trip_entry_path(@trip, @entry), notice: "Photos added."
   end
 
   def update

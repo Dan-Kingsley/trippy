@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { DirectUpload } from "@rails/activestorage"
 
 // Reads each photo's EXIF date/time and GPS location directly in the browser
 // as soon as they're selected, so the adventurer immediately sees whether
@@ -7,13 +8,26 @@ import { Controller } from "@hotwired/stimulus"
 // uploaded). If none of the selected photos carry one of those, the matching
 // "manually set" toggle is checked for them so they don't have to find it
 // themselves - checking is a nudge, never automatic, and never un-checked.
+//
+// Selected files also upload straight to storage here (one DirectUpload per
+// file, each with its own progress bar), rather than waiting to be posted as
+// part of the surrounding form - a checksum is verified server-side before
+// each blob is usable, so a connection dropped partway through on patchy
+// internet fails that file with a clear error instead of silently attaching
+// a truncated one. Successful uploads are referenced from the form via a
+// hidden photo_signed_ids[] field per file, and the original file input is
+// cleared so its (now-redundant) raw bytes aren't also posted - if this
+// script never runs at all, that input is untouched and the plain multipart
+// upload it was always capable of still works as a fallback.
 export default class extends Controller {
-  static targets = [ "input", "status", "timeCheckbox", "locationCheckbox", "fileCount" ]
+  static targets = [ "input", "status", "timeCheckbox", "locationCheckbox", "fileCount", "uploadList", "submit" ]
+  static values = { directUploadUrl: String }
 
   connect() {
     this.onPaste = this.onPaste.bind(this)
     this.element.addEventListener("paste", this.onPaste)
     this.defaultFileCountText = this.hasFileCountTarget ? this.fileCountTarget.textContent : null
+    this.pendingUploads = 0
   }
 
   disconnect() {
@@ -47,13 +61,15 @@ export default class extends Controller {
     if (this.hasFileCountTarget) {
       this.fileCountTarget.textContent = files.length === 0
         ? this.defaultFileCountText
-        : `${files.length} photo${files.length === 1 ? "" : "s"} selected`
+        : `${files.length} file${files.length === 1 ? "" : "s"} selected`
     }
 
     if (files.length === 0) {
       this.statusTarget.classList.add("hidden")
       return
     }
+
+    this.uploadFiles(files)
 
     this.statusTarget.textContent = "Reading photo date & location…"
     this.statusTarget.classList.remove("hidden")
@@ -92,6 +108,78 @@ export default class extends Controller {
     if (!location && this.hasLocationCheckboxTarget && !this.locationCheckboxTarget.checked) {
       this.check(this.locationCheckboxTarget)
     }
+  }
+
+  uploadFiles(files) {
+    if (!this.hasDirectUploadUrlValue || !this.hasUploadListTarget) return
+
+    this.uploadListTarget.innerHTML = ""
+    this.uploadListTarget.classList.remove("hidden")
+    this.pendingUploads += files.length
+    this.setSubmitDisabled(true)
+
+    files.forEach((file) => this.uploadFile(file))
+
+    // The DirectUpload calls above already have their own reference to each
+    // File object, so it's safe to clear the input now rather than waiting
+    // for them to finish - this is what keeps these files from also being
+    // posted as raw multipart bytes once their signed IDs are in the form.
+    this.inputTarget.value = ""
+  }
+
+  uploadFile(file) {
+    const row = this.buildProgressRow(file.name)
+    this.uploadListTarget.appendChild(row.element)
+
+    const upload = new DirectUpload(file, this.directUploadUrlValue, {
+      directUploadWillStoreFileWithXHR: (xhr) => {
+        xhr.upload.addEventListener("progress", (event) => {
+          if (!event.lengthComputable) return
+          row.bar.style.width = `${Math.round((event.loaded / event.total) * 100)}%`
+        })
+      }
+    })
+
+    upload.create((error, blob) => {
+      if (error) {
+        row.bar.classList.replace("bg-amber-600", "bg-red-600")
+        row.label.textContent = `${file.name} — upload failed (${error})`
+      } else {
+        row.bar.style.width = "100%"
+        const hidden = document.createElement("input")
+        hidden.type = "hidden"
+        hidden.name = "photo_signed_ids[]"
+        hidden.value = blob.signed_id
+        this.element.appendChild(hidden)
+      }
+
+      this.pendingUploads = Math.max(0, this.pendingUploads - 1)
+      if (this.pendingUploads === 0) this.setSubmitDisabled(false)
+    })
+  }
+
+  buildProgressRow(name) {
+    const element = document.createElement("div")
+    element.className = "flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400"
+
+    const label = document.createElement("span")
+    label.className = "truncate flex-1"
+    label.textContent = name
+    element.appendChild(label)
+
+    const track = document.createElement("div")
+    track.className = "w-24 h-1.5 rounded-full bg-stone-200 dark:bg-stone-800 overflow-hidden shrink-0"
+    const bar = document.createElement("div")
+    bar.className = "h-full bg-amber-600 transition-all"
+    bar.style.width = "0%"
+    track.appendChild(bar)
+    element.appendChild(track)
+
+    return { element, label, bar }
+  }
+
+  setSubmitDisabled(disabled) {
+    if (this.hasSubmitTarget) this.submitTarget.disabled = disabled
   }
 
   // Ticks a checkbox programmatically and fires the events a real click

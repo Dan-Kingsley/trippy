@@ -44,8 +44,9 @@ use `reverse-proxy` network to connect trippy to your caddy reverse proxy
 
 ## Local development (without Docker)
 
-Requires Ruby 3.4 and Node is not needed (Tailwind builds via a standalone
-binary).
+Requires Ruby 3.4 and `ffmpeg` (for video thumbnail previews) and `libvips`
+(for photo variants) installed locally. Node is not needed (Tailwind builds
+via a standalone binary).
 
 ```sh
 bin/setup
