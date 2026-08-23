@@ -1,28 +1,74 @@
-<div data-controller="toggle location-picker"
-     <% if entry.latitude.present? && entry.longitude.present? %>
-       data-location-picker-lat-value="<%= entry.latitude %>"
-       data-location-picker-lng-value="<%= entry.longitude %>"
-     <% end %>>
-  <div class="flex items-center gap-2">
-    <%= form.check_box :manual_location, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700",
-          data: { action: "toggle#sync location-picker#sync", photo_date_target: "locationCheckbox" } %>
-    <%= form.label :manual_location, "Manually set location", class: "text-sm text-stone-600 dark:text-stone-300" %>
-  </div>
-  <div data-toggle-target="revealable" class="hidden mt-2 space-y-2">
-    <div class="relative">
-      <div data-location-picker-target="map" class="h-56 w-full rounded-md border border-stone-300 dark:border-stone-700 z-0"></div>
-      <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <svg viewBox="0 0 24 24" class="w-8 h-8 text-red-600 drop-shadow" style="transform: translateY(-50%)" fill="currentColor">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" />
-        </svg>
-      </div>
+<% located_photos = entry.persisted? ? entry.photos.select { |p| p.latitude.present? && p.longitude.present? } : [] %>
+<% mean_lat, mean_lng = TripEntry.mean_coordinates(located_photos) if located_photos.any? %>
+<% selected_photo = located_photos.detect { |p| p.id == entry.location_photo_id } || located_photos.first %>
+
+<div data-controller="radio-toggle" data-action="change->radio-toggle#sync">
+  <p class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1">Location</p>
+  <div class="space-y-3">
+    <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
+      <%= form.radio_button :location_source, "automatic", class: "border-stone-300 dark:border-stone-700 text-amber-700" %>
+      Automatic &mdash; average location from your photos' GPS data
+    </label>
+    <div data-radio-toggle-target="panel" data-radio-toggle-value="automatic" class="hidden mb-2">
+      <% if mean_lat %>
+        <div data-controller="location-preview"
+             data-location-preview-lat-value="<%= mean_lat %>" data-location-preview-lng-value="<%= mean_lng %>">
+          <div data-location-preview-target="map" class="h-40 w-full rounded-md border border-stone-300 dark:border-stone-700 z-0"></div>
+        </div>
+        <p class="text-xs text-stone-400 mt-1">Averaged from <%= pluralize(located_photos.size, "photo") %> with location data.</p>
+      <% else %>
+        <p class="text-xs text-stone-400">No location data found in your photos yet.</p>
+      <% end %>
     </div>
-    <p class="text-xs text-stone-400">Drag the map until the pin marks the right spot.</p>
-    <div class="grid grid-cols-2 gap-3">
-      <%= form.number_field :latitude, step: "any", readonly: true, data: { location_picker_target: "lat" },
-            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-stone-100 dark:bg-stone-800/60 px-3 py-2 text-stone-500 dark:text-stone-400" %>
-      <%= form.number_field :longitude, step: "any", readonly: true, data: { location_picker_target: "lng" },
-            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-stone-100 dark:bg-stone-800/60 px-3 py-2 text-stone-500 dark:text-stone-400" %>
+
+    <% if located_photos.any? %>
+      <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
+        <%= form.radio_button :location_source, "photo", class: "border-stone-300 dark:border-stone-700 text-amber-700" %>
+        Use one of your photos' locations
+      </label>
+      <div data-radio-toggle-target="panel" data-radio-toggle-value="photo" class="hidden mb-2 space-y-2"
+           data-controller="location-preview"
+           data-location-preview-lat-value="<%= selected_photo.latitude %>" data-location-preview-lng-value="<%= selected_photo.longitude %>">
+        <div data-location-preview-target="map" class="h-40 w-full rounded-md border border-stone-300 dark:border-stone-700 z-0"></div>
+        <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+          <% located_photos.each do |photo| %>
+            <label class="relative cursor-pointer">
+              <%= form.radio_button :location_photo_id, photo.id, class: "peer sr-only",
+                    data: { action: "location-preview#showPhoto", lat: photo.latitude, lng: photo.longitude } %>
+              <%= photo_thumb_tag photo, size: 96,
+                    css_class: "w-full aspect-square rounded-md object-cover border-2 border-transparent peer-checked:border-amber-600" %>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
+      <%= form.radio_button :location_source, "manual", class: "border-stone-300 dark:border-stone-700 text-amber-700",
+            data: { photo_date_target: "locationManualRadio" } %>
+      Manually pick on a map
+    </label>
+    <div data-radio-toggle-target="panel" data-radio-toggle-value="manual" class="hidden space-y-2"
+         data-controller="location-picker"
+         <% if entry.latitude.present? && entry.longitude.present? %>
+           data-location-picker-lat-value="<%= entry.latitude %>"
+           data-location-picker-lng-value="<%= entry.longitude %>"
+         <% end %>>
+      <div class="relative">
+        <div data-location-picker-target="map" class="h-56 w-full rounded-md border border-stone-300 dark:border-stone-700 z-0"></div>
+        <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <svg viewBox="0 0 24 24" class="w-8 h-8 text-red-600 drop-shadow" style="transform: translateY(-50%)" fill="currentColor">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" />
+          </svg>
+        </div>
+      </div>
+      <p class="text-xs text-stone-400">Drag the map until the pin marks the right spot.</p>
+      <div class="grid grid-cols-2 gap-3">
+        <%= form.number_field :latitude, step: "any", readonly: true, data: { location_picker_target: "lat" },
+              class: "rounded-md border border-stone-300 dark:border-stone-700 bg-stone-100 dark:bg-stone-800/60 px-3 py-2 text-stone-500 dark:text-stone-400" %>
+        <%= form.number_field :longitude, step: "any", readonly: true, data: { location_picker_target: "lng" },
+              class: "rounded-md border border-stone-300 dark:border-stone-700 bg-stone-100 dark:bg-stone-800/60 px-3 py-2 text-stone-500 dark:text-stone-400" %>
+      </div>
     </div>
   </div>
 </div>

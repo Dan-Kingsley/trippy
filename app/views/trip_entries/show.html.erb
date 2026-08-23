@@ -83,6 +83,8 @@
     <% if @trip_member %>
       <p class="text-xs text-stone-500 dark:text-stone-400">
         <%= pluralize(@entry.views_count, "view") %>
+        &middot; <%= pluralize(@entry.comments_count, "comment") %>
+        &middot; <%= pluralize(@entry.reactions_count, "reaction") %>
       </p>
     <% end %>
   </div>

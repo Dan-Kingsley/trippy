@@ -43,25 +43,7 @@
 
   <%= render "who_else_field", trip: @trip, entry: @entry, exclude_user_id: Current.user.id %>
 
-  <div data-controller="toggle">
-    <div class="flex items-center gap-2">
-      <%= form.check_box :manual_time, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700",
-            data: { action: "toggle#sync", photo_date_target: "timeCheckbox" } %>
-      <%= form.label :manual_time, "Manually set date & time", class: "text-sm text-stone-600 dark:text-stone-300" %>
-    </div>
-    <div data-toggle-target="revealable" class="hidden mt-2" data-controller="datetime-picker">
-      <%= form.hidden_field :occurred_at, data: { datetime_picker_target: "hidden" } %>
-      <div class="flex gap-2">
-        <input type="date" data-datetime-picker-target="date" data-action="input->datetime-picker#combine"
-          class="rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2">
-        <input type="time" data-datetime-picker-target="time" data-action="input->datetime-picker#combine"
-          class="rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2">
-        <button type="button" data-action="datetime-picker#setNow"
-          class="shrink-0 rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium cursor-pointer">Now</button>
-      </div>
-      <p class="text-xs text-stone-400 mt-1">Used to order entries chronologically. Defaults to the upload time if no photo date is found. Only visible to you.</p>
-    </div>
-  </div>
+  <%= render "datetime_field", form: form, entry: @entry %>
 
   <%= form.submit "Add entry", data: { photo_date_target: "submit" },
         class: "rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>

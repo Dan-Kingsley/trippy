@@ -1,7 +1,7 @@
 class Reaction < ApplicationRecord
   QUICK_EMOJI = %w[👍 ❤️ 😂 😮 🎉 😢].freeze
 
-  belongs_to :trip_entry
+  belongs_to :trip_entry, counter_cache: true
   belongs_to :user
 
   validates :emoji, presence: true

@@ -137,6 +137,8 @@
             <%= entry.occurred_at&.to_date&.strftime("%-d %b %Y") %>
             <% if @trip_member %>
               &middot; <%= pluralize(entry.views_count, "view") %>
+              &middot; <%= pluralize(entry.comments_count, "comment") %>
+              &middot; <%= pluralize(entry.reactions_count, "reaction") %>
             <% end %>
           </p>
         </div>

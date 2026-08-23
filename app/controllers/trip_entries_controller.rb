@@ -100,8 +100,23 @@ class TripEntriesController < ApplicationController
     def entry_params
       params.require(:trip_entry).permit(
         :title, :description, :latitude, :longitude, :occurred_at,
-        :manual_location, :manual_time
-      ).merge(tagged_collaborator_ids: allowed_tagged_collaborator_ids)
+        :location_source, :manual_time
+      ).merge(
+        tagged_collaborator_ids: allowed_tagged_collaborator_ids,
+        location_photo_id: allowed_location_photo_id
+      )
+    end
+
+    # Scopes the pickable "use this photo's location" option to photos that
+    # actually belong to this entry, so a tampered request can't point the
+    # location at another entry's (possibly private) photo. Entries only ever
+    # have photos to pick from once they're persisted, so this is a no-op on
+    # create.
+    def allowed_location_photo_id
+      requested = params.dig(:trip_entry, :location_photo_id)
+      return nil if requested.blank? || @entry.nil?
+
+      @entry.photos.where(id: requested).pick(:id)
     end
 
     # Restricts taggable "who else was there?" people to the trip's own

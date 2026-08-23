@@ -176,7 +176,7 @@ module Importing
           occurred_at: parse_time(entry_data["occurred_at"]),
           latitude: entry_data["latitude"],
           longitude: entry_data["longitude"],
-          manual_location: !!entry_data["manual_location"],
+          location_source: entry_data["location_source"] || (entry_data["manual_location"] ? "manual" : "automatic"),
           manual_time: !!entry_data["manual_time"],
           created_by: resolve_user(entry_data["created_by_username"])
         )
@@ -184,11 +184,24 @@ module Importing
         entry.update_column(:views_count, entry_data["views_count"].to_i) if entry_data["views_count"].present?
 
         Array(entry_data["photos"]).each { |photo_data| create_photo!(zip, entry, photo_data) }
+        apply_location_photo!(entry, entry_data["location_photo_index"])
         create_comments!(entry, entry_data["comments"])
         create_reactions!(entry, entry_data["reactions"])
         tag_participants!(trip, entry, entry_data["tagged_collaborator_usernames"])
 
         entry
+      end
+
+      # Old-style manifests only recorded photo order via "position", not the
+      # synthetic index this exporter now uses to point back at "the photo
+      # whose location this entry uses" - so there's nothing to resolve for
+      # those, and location_photo just stays unset (fine: "photo" without a
+      # location_photo behaves the same as "automatic" finding no photos yet).
+      def apply_location_photo!(entry, location_photo_index)
+        return if location_photo_index.nil?
+
+        photo = entry.photos.order(:position).to_a[location_photo_index]
+        entry.update!(location_photo: photo) if photo
       end
 
       def create_photo!(zip, entry, photo_data)

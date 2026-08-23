@@ -20,7 +20,7 @@ import { DirectUpload } from "@rails/activestorage"
 // script never runs at all, that input is untouched and the plain multipart
 // upload it was always capable of still works as a fallback.
 export default class extends Controller {
-  static targets = [ "input", "status", "timeCheckbox", "locationCheckbox", "fileCount", "uploadList", "submit" ]
+  static targets = [ "input", "status", "timeCheckbox", "locationManualRadio", "fileCount", "uploadList", "submit" ]
   static values = { directUploadUrl: String }
 
   connect() {
@@ -105,8 +105,8 @@ export default class extends Controller {
     if (!takenAt && this.hasTimeCheckboxTarget && !this.timeCheckboxTarget.checked) {
       this.check(this.timeCheckboxTarget)
     }
-    if (!location && this.hasLocationCheckboxTarget && !this.locationCheckboxTarget.checked) {
-      this.check(this.locationCheckboxTarget)
+    if (!location && this.hasLocationManualRadioTarget && !this.locationManualRadioTarget.checked) {
+      this.check(this.locationManualRadioTarget)
     }
   }
 
