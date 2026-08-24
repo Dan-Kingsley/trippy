@@ -75,8 +75,8 @@ class TripEntriesController < ApplicationController
       ordered = visible.to_a.reverse
       index = ordered.index(@entry)
 
-      @previous_entry = index && ordered[index - 1] if index&.positive?
-      @next_entry = index && index < ordered.length - 1 ? ordered[index + 1] : nil
+      @newer_entry = index && ordered[index - 1] if index&.positive?
+      @older_entry = index && index < ordered.length - 1 ? ordered[index + 1] : nil
     end
 
     def require_view_access

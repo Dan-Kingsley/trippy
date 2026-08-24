@@ -4,11 +4,11 @@
   <div class="flex items-center gap-1.5 min-w-0">
     <%= link_to "&larr; #{t("trip_entries.show.back_to_trip", trip_title: @trip.title)}".html_safe, trip_path(@trip), class: "inline-flex items-center gap-1 rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium truncate" %>
 
-    <% if @previous_entry %>
-      <%= link_to "&#8249;".html_safe, trip_trip_entry_path(@trip, @previous_entry), "aria-label" => t("trip_entries.show.previous_entry"), title: t("trip_entries.show.previous_entry"), class: "shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
+    <% if @older_entry %>
+      <%= link_to "&#8249;".html_safe, trip_trip_entry_path(@trip, @older_entry), "aria-label" => t("trip_entries.show.older_entry"), title: t("trip_entries.show.older_entry"), class: "shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
     <% end %>
-    <% if @next_entry %>
-      <%= link_to "&#8250;".html_safe, trip_trip_entry_path(@trip, @next_entry), "aria-label" => t("trip_entries.show.next_entry"), title: t("trip_entries.show.next_entry"), class: "shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
+    <% if @newer_entry %>
+      <%= link_to "&#8250;".html_safe, trip_trip_entry_path(@trip, @newer_entry), "aria-label" => t("trip_entries.show.newer_entry"), title: t("trip_entries.show.newer_entry"), class: "shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
     <% end %>
   </div>
 
