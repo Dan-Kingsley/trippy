@@ -26,6 +26,24 @@
 #     en:
 #       "yes": yup
 #       enabled: "ON"
+#
+# Only a small, high-traffic slice of the app is translated so far (layout
+# chrome, the settings page, the language picker itself) - most views are
+# still literal English strings, which is unchanged existing behavior, not a
+# regression. Keep en.yml and de.yml structurally identical (same key tree)
+# as more strings are migrated over time.
 
 en:
   hello: "Hello world"
+  layout:
+    sign_in: "Sign in"
+    sign_up: "Sign up"
+    my_trips: "My Trips"
+    admin: "Admin"
+  shared:
+    locale_modal:
+      choose_language: "Choose your language"
+  settings:
+    edit:
+      title: "Settings"
+      language_label: "Language"

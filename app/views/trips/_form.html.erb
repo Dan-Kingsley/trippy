@@ -15,9 +15,21 @@
           class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
   </div>
 
+  <div>
+    <%= form.label :description, "Blurb", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+    <%= form.text_area :description, rows: 3, maxlength: 300,
+          placeholder: "A short description of this trip (300 characters max)",
+          class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
+  </div>
+
   <div class="flex items-center gap-2">
     <%= form.check_box :public, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700" %>
     <%= form.label :public, "Public (listed on the homepage for everyone)", class: "text-sm text-stone-600 dark:text-stone-300" %>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <%= form.check_box :hidden, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700" %>
+    <%= form.label :hidden, "Hidden (won't show up in trip listings, but direct/shared links still work)", class: "text-sm text-stone-600 dark:text-stone-300" %>
   </div>
 
   <% trip_photos = trip.persisted? ? trip.photos.reject(&:video?) : [] %>

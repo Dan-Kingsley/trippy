@@ -1,7 +1,7 @@
 <% content_for :title, "Settings - Trippy" %>
 
 <div class="mx-auto max-w-sm w-full py-8">
-  <h1 class="font-bold text-3xl mb-6 text-stone-800 dark:text-stone-100">Settings</h1>
+  <h1 class="font-bold text-3xl mb-6 text-stone-800 dark:text-stone-100"><%= t("settings.edit.title") %></h1>
 
   <% if @user.errors.any? %>
     <div class="mb-4 rounded-lg bg-red-50 dark:bg-red-900/40 px-4 py-2.5 text-red-600 dark:text-red-300 text-sm">
@@ -30,6 +30,12 @@
     <div>
       <%= form.label :username, class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
       <%= form.text_field :username, required: true, autocomplete: "username",
+            class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
+    </div>
+
+    <div>
+      <%= form.label :locale, t("settings.edit.language_label"), class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+      <%= form.select :locale, Locale.select_options, {},
             class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
     </div>
 

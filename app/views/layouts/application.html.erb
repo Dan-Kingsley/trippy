@@ -44,15 +44,17 @@
             </button>
           </div>
 
+          <%= render "shared/locale_modal" unless authenticated? %>
+
           <%= render "shared/private_access_modal" %>
 
           <% if authenticated? %>
             <div class="flex items-center gap-1 sm:gap-3 text-xs sm:text-sm">
               <% if Current.user.admin? %>
-                <%= link_to "Admin", admin_users_path, class: "px-1.5 sm:px-0 whitespace-nowrap text-stone-600 dark:text-stone-300 hover:text-amber-700 dark:hover:text-amber-400" %>
+                <%= link_to t("layout.admin"), admin_users_path, class: "px-1.5 sm:px-0 whitespace-nowrap text-stone-600 dark:text-stone-300 hover:text-amber-700 dark:hover:text-amber-400" %>
               <% end %>
               <% if Current.user.adventurer? %>
-                <%= link_to "My Trips", trips_path, class: "px-1.5 sm:px-0 whitespace-nowrap text-stone-600 dark:text-stone-300 hover:text-amber-700 dark:hover:text-amber-400" %>
+                <%= link_to t("layout.my_trips"), trips_path, class: "px-1.5 sm:px-0 whitespace-nowrap text-stone-600 dark:text-stone-300 hover:text-amber-700 dark:hover:text-amber-400" %>
               <% end %>
               <%= link_to edit_settings_path, class: "flex items-center gap-1.5 text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400" do %>
                 <%= avatar_tag Current.user, size: 48, css_class: "w-6 h-6 text-[10px]" %>
@@ -61,8 +63,8 @@
             </div>
           <% else %>
             <div class="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-              <%= link_to "Sign in", new_session_path, class: "whitespace-nowrap rounded-md px-2 sm:px-3 py-1.5 text-stone-700 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-800" %>
-              <%= link_to "Sign up", new_registration_path, class: "whitespace-nowrap rounded-md px-2 sm:px-3 py-1.5 bg-amber-700 hover:bg-amber-600 text-white font-medium" %>
+              <%= link_to t("layout.sign_in"), new_session_path, class: "whitespace-nowrap rounded-md px-2 sm:px-3 py-1.5 text-stone-700 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-800" %>
+              <%= link_to t("layout.sign_up"), new_registration_path, class: "whitespace-nowrap rounded-md px-2 sm:px-3 py-1.5 bg-amber-700 hover:bg-amber-600 text-white font-medium" %>
             </div>
           <% end %>
         </div>

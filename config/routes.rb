@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   resource :registration, only: %i[ new create ]
   resource :settings, only: %i[ edit update ]
   resource :import, only: %i[ create ], controller: "imports"
+  resource :locale_override, only: %i[ create ]
 
   resources :private_accesses, only: %i[ create ], path: "access"
 

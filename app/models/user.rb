@@ -5,7 +5,7 @@ class User < ApplicationRecord
     # every display size the app renders avatars at - keeps the number of
     # variants that can fail to process down to one per user, rather than
     # one per distinct `size:` an avatar_tag call site happens to pass.
-    attachable.variant :thumb, resize_to_fill: [ 128, 128 ], saver: { quality: 80 }
+    attachable.variant :thumb, resize_to_fill: [ 128, 128 ], saver: { quality: 80 }, loader: { fail_on: :error }
   end
   has_many :sessions, dependent: :destroy
 
@@ -25,6 +25,7 @@ class User < ApplicationRecord
   validates :username, presence: true, uniqueness: true,
     format: { with: /\A[a-z0-9_.-]+\z/, message: "can only contain letters, numbers, dots, dashes and underscores" }
   validates :password, length: { minimum: 8 }, allow_nil: true
+  validates :locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
   validate :acceptable_profile_picture_content_type
 
   before_create :bootstrap_first_user_as_admin

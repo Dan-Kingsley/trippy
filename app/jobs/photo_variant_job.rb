@@ -1,6 +1,18 @@
 class PhotoVariantJob < ApplicationJob
   queue_as :default
 
+  # A partial/corrupt decode (fail_on: :error on the variant's loader, set on
+  # Photo#image) raises Vips::Error rather than returning a bad image - retry
+  # a couple of times in case it's transient container memory pressure before
+  # giving up and flagging the photo as failed. The give-up block is passed
+  # directly to retry_on (rather than a separate discard_on for the same
+  # exception, which would ambiguously double-register a handler for it).
+  retry_on Vips::Error, wait: :polynomially_longer, attempts: 3 do |job, error|
+    photo_id = job.arguments.first
+    Photo.find_by(id: photo_id)&.update_column(:processing_failed_at, Time.current)
+    Rails.logger.warn("PhotoVariantJob: giving up on photo #{photo_id} after retries: #{error.message}")
+  end
+
   def perform(photo_id)
     photo = Photo.find_by(id: photo_id)
     return unless photo&.image&.attached?
@@ -16,8 +28,9 @@ class PhotoVariantJob < ApplicationJob
   rescue ActiveStorage::InvariableError, ActiveStorage::UnpreviewableError, ActiveStorage::UnrepresentableError => e
     # A corrupt/truncated upload or an unsupported codec can't be turned into
     # a variant/preview - leave the photo attached (so the uploader isn't
-    # silently missing an entry) but don't retry forever; the view falls
-    # back to a placeholder when no processed variant is available.
+    # silently missing an entry) but don't retry forever; flag it so the
+    # uploader gets a visible signal instead of a permanently-broken thumbnail.
+    photo.update_column(:processing_failed_at, Time.current)
     Rails.logger.warn("PhotoVariantJob: could not process photo #{photo_id}: #{e.message}")
   end
 end

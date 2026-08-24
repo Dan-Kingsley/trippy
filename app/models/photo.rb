@@ -7,8 +7,11 @@ class Photo < ApplicationRecord
     # kept small so pages stay snappy. Only the lightbox loads :full.
     # These only apply to image content; videos are previewed instead (see
     # PhotoVariantJob).
-    attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }
-    attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }
+    # fail_on: :error makes a partial/corrupt decode (as seen with some
+    # camera JPEGs) raise instead of silently returning a gray-filled image -
+    # see PhotoVariantJob for how that's turned into a retry + failure flag.
+    attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }, loader: { fail_on: :error }
+    attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }, loader: { fail_on: :error }
   end
 
   validate :acceptable_content_type
@@ -19,6 +22,10 @@ class Photo < ApplicationRecord
 
   def video?
     image.attached? && image.content_type.start_with?("video/")
+  end
+
+  def processing_failed?
+    processing_failed_at.present?
   end
 
   private

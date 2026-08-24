@@ -9,14 +9,19 @@ class TripEntriesController < ApplicationController
   before_action :set_entry, only: %i[ show edit update destroy ]
 
   def show
-    @comments = @entry.comments.where(parent_id: nil).includes(:user, replies: :user).order(:created_at)
     @editable = Current.user&.can_edit?(@trip) || false
+
+    if @entry.hidden? && !@editable
+      redirect_to trip_path(@trip), alert: "This entry is hidden." and return
+    end
+
+    @comments = @entry.comments.where(parent_id: nil).includes(:user, replies: :user).order(:created_at)
     @trip_member = Current.user && @trip.editors.exists?(id: Current.user.id)
     record_view!
   end
 
   def new
-    @entry = @trip.trip_entries.new(occurred_at: Time.current)
+    @entry = @trip.trip_entries.new(occurred_at: Time.current, language: Current.user.locale)
   end
 
   def create
@@ -100,7 +105,7 @@ class TripEntriesController < ApplicationController
     def entry_params
       params.require(:trip_entry).permit(
         :title, :description, :latitude, :longitude, :occurred_at,
-        :location_source, :manual_time
+        :location_source, :manual_time, :hidden, :language
       ).merge(
         tagged_collaborator_ids: allowed_tagged_collaborator_ids,
         location_photo_id: allowed_location_photo_id

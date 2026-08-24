@@ -89,6 +89,13 @@
   </div>
 </div>
 
+<% if @trip.description.present? %>
+  <details class="mb-4 text-sm text-stone-600 dark:text-stone-300">
+    <summary class="cursor-pointer font-medium text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400">About this trip</summary>
+    <p class="mt-1.5 whitespace-pre-line max-w-2xl"><%= @trip.description %></p>
+  </details>
+<% end %>
+
 <div
   data-controller="trip-map"
   data-trip-map-entries-value="<%= @entries.map { |e|
@@ -132,7 +139,10 @@
           </div>
         </div>
         <div class="min-w-0">
-          <p class="font-medium text-stone-800 dark:text-stone-100 truncate"><%= entry.title %></p>
+          <p class="font-medium text-stone-800 dark:text-stone-100 truncate">
+            <%= entry.title %>
+            <% if entry.hidden? %><span title="Hidden from non-collaborators">🙈</span><% end %>
+          </p>
           <p class="text-xs text-stone-500 dark:text-stone-400">
             <%= entry.occurred_at&.to_date&.strftime("%-d %b %Y") %>
             <% if @trip_member %>

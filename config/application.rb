@@ -42,6 +42,12 @@ module Trippy
     config.active_storage.variant_processor = :vips
     config.time_zone = "UTC"
 
+    config.i18n.available_locales = [ :en, :de ]
+    config.i18n.default_locale = :en
+    # A key missed in a non-default locale file degrades to English text
+    # instead of raising/blank, since keys are added incrementally over time.
+    config.i18n.fallbacks = true
+
     # Serve attachments directly through the app instead of redirecting to a
     # separately-expiring signed storage URL - one fewer network hop (which
     # matters on patchy mobile connections) and no more possibility of that

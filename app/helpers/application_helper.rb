@@ -23,7 +23,7 @@ module ApplicationHelper
     return unless photo.image.attached?
 
     inner_class = "w-full h-full object-cover"
-    img = image_tag photo.video? ? photo.image.preview(resize_to_limit: [ size, size ]) : photo.image.variant(resize_to_fill: [ size, size ], saver: { quality: 80 }),
+    img = image_tag photo.video? ? photo.image.preview(resize_to_limit: [ size, size ]) : photo.image.variant(resize_to_fill: [ size, size ], saver: { quality: 80 }, loader: { fail_on: :error }),
       class: inner_class, loading: "lazy",
       data: { attachment_fallback: true, fallback_class: inner_class, fallback_content: (photo.video? ? "🎬" : nil) }
 

@@ -12,10 +12,11 @@ class Trip < ApplicationRecord
   has_many :favorites, dependent: :destroy
   has_many :favorited_by, through: :favorites, source: :user
   has_one_attached :cover_photo do |attachable|
-    attachable.variant :thumb, resize_to_fill: [ 600, 400 ], saver: { quality: 80 }
+    attachable.variant :thumb, resize_to_fill: [ 600, 400 ], saver: { quality: 80 }, loader: { fail_on: :error }
   end
 
   validates :title, presence: true
+  validates :description, length: { maximum: 300 }
   validates :cover_source, inclusion: { in: COVER_SOURCES }
   validate :acceptable_cover_photo_content_type
 

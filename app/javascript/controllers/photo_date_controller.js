@@ -21,13 +21,20 @@ import { DirectUpload } from "@rails/activestorage"
 // upload it was always capable of still works as a fallback.
 export default class extends Controller {
   static targets = [ "input", "status", "timeCheckbox", "locationManualRadio", "fileCount", "uploadList", "submit" ]
-  static values = { directUploadUrl: String }
+  // autoSubmit: when true, the surrounding form submits itself as soon as
+  // every selected file finishes uploading, with no manual "Upload" click
+  // needed - only set on forms whose sole purpose is attaching photos (e.g.
+  // the edit-entry page's "add more photos" form), never on a form that also
+  // collects other required fields (e.g. a new entry's title), where
+  // submitting early would be premature.
+  static values = { directUploadUrl: String, autoSubmit: Boolean }
 
   connect() {
     this.onPaste = this.onPaste.bind(this)
     this.element.addEventListener("paste", this.onPaste)
     this.defaultFileCountText = this.hasFileCountTarget ? this.fileCountTarget.textContent : null
     this.pendingUploads = 0
+    this.uploadFailed = false
   }
 
   disconnect() {
@@ -116,6 +123,7 @@ export default class extends Controller {
     this.uploadListTarget.innerHTML = ""
     this.uploadListTarget.classList.remove("hidden")
     this.pendingUploads += files.length
+    this.uploadFailed = false
     this.setSubmitDisabled(true)
 
     files.forEach((file) => this.uploadFile(file))
@@ -142,10 +150,16 @@ export default class extends Controller {
 
     upload.create((error, blob) => {
       if (error) {
+        this.uploadFailed = true
         row.bar.classList.replace("bg-amber-600", "bg-red-600")
         row.label.textContent = `${file.name} — upload failed (${error})`
       } else {
+        // DirectUpload only calls back without an error once the server has
+        // verified the uploaded bytes' checksum, so the full file is
+        // confirmed intact by this point - safe to show the success tick.
         row.bar.style.width = "100%"
+        row.bar.classList.replace("bg-amber-600", "bg-green-600")
+        row.check.classList.remove("hidden")
         const hidden = document.createElement("input")
         hidden.type = "hidden"
         hidden.name = "photo_signed_ids[]"
@@ -154,7 +168,10 @@ export default class extends Controller {
       }
 
       this.pendingUploads = Math.max(0, this.pendingUploads - 1)
-      if (this.pendingUploads === 0) this.setSubmitDisabled(false)
+      if (this.pendingUploads === 0) {
+        this.setSubmitDisabled(false)
+        if (this.autoSubmitValue && !this.uploadFailed) this.element.requestSubmit()
+      }
     })
   }
 
@@ -175,7 +192,12 @@ export default class extends Controller {
     track.appendChild(bar)
     element.appendChild(track)
 
-    return { element, label, bar }
+    const check = document.createElement("span")
+    check.className = "hidden text-green-600 dark:text-green-500 shrink-0"
+    check.textContent = "✓"
+    element.appendChild(check)
+
+    return { element, label, bar, check }
   }
 
   setSubmitDisabled(disabled) {

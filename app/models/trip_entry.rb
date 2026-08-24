@@ -17,6 +17,7 @@ class TripEntry < ApplicationRecord
   validates :title, presence: true
   validates :occurred_at, presence: true
   validates :location_source, inclusion: { in: LOCATION_SOURCES }
+  validates :language, inclusion: { in: I18n.available_locales.map(&:to_s) }
 
   # Keeps location/time in sync whenever the adventurer switches how either
   # one should be derived - Photo's own create/destroy callbacks (see

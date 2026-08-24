@@ -17,12 +17,13 @@ class TripsController < ApplicationController
       redirect_to root_path, alert: "This trip is private. Enter its access code to view it." and return
     end
 
-    @entries = @trip.trip_entries.includes(
+    @editable = Current.user&.can_edit?(@trip) || false
+    entries = @editable ? @trip.trip_entries : @trip.trip_entries.where(hidden: false)
+    @entries = entries.includes(
       photos: { image_attachment: :blob },
       created_by: { profile_picture_attachment: :blob },
       tagged_collaborators: { profile_picture_attachment: :blob }
     )
-    @editable = Current.user&.can_edit?(@trip) || false
     @can_add_entries = Current.user&.can_add_entries?(@trip) || false
     @trip_member = Current.user && @trip.editors.exists?(id: Current.user.id)
   end
@@ -80,7 +81,7 @@ class TripsController < ApplicationController
     end
 
     def trip_params
-      params.require(:trip).permit(:title, :public, :cover_photo, :cover_source)
+      params.require(:trip).permit(:title, :description, :public, :hidden, :cover_photo, :cover_source)
         .merge(cover_photo_id: allowed_cover_photo_id)
     end
 

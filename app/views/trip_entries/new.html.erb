@@ -25,6 +25,11 @@
     <%= form.label :description, "Description (Markdown supported)", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
     <%= form.text_area :description, rows: 5,
           class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
+    <div class="mt-2">
+      <%= form.label :language, "Written in", class: "block text-xs font-medium text-stone-500 dark:text-stone-400 mb-1" %>
+      <%= form.select :language, Locale.select_options, {},
+            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-2 py-1 text-sm" %>
+    </div>
   </div>
 
   <div>

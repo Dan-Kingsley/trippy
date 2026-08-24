@@ -12,6 +12,10 @@
       <% @entry.photos.each do |photo| %>
         <div data-reorder-target="item" data-url="<%= trip_trip_entry_photo_path(@trip, @entry, photo) %>" class="relative cursor-move">
           <%= photo_thumb_tag photo, size: 96, css_class: "w-24 h-24 rounded-lg object-cover border border-stone-200 dark:border-stone-800" %>
+          <% if photo.processing_failed? %>
+            <span title="This photo failed to process - try removing and re-uploading it."
+              class="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-amber-500 text-white text-sm leading-none flex items-center justify-center cursor-help">⚠</span>
+          <% end %>
           <%= button_to "&times;".html_safe, trip_trip_entry_photo_path(@trip, @entry, photo), method: :delete,
                 form: { data: { turbo_confirm: "Remove this photo?" } },
                 class: "absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 hover:bg-red-500 text-white text-sm leading-none cursor-pointer" %>
@@ -22,7 +26,7 @@
 <% end %>
 
 <%= form_with url: trip_trip_entry_photos_path(@trip, @entry), method: :post, multipart: true, class: "mb-8 max-w-lg",
-      data: { controller: "photo-date", photo_date_direct_upload_url_value: rails_direct_uploads_path } do |form| %>
+      data: { controller: "photo-date", photo_date_direct_upload_url_value: rails_direct_uploads_path, photo_date_auto_submit_value: true } do |form| %>
   <div class="flex items-end gap-3">
     <div class="flex-1 min-w-0">
       <%= form.label :photos, "Add more photos or videos", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
@@ -58,6 +62,11 @@
     <%= form.label :description, "Description (Markdown supported)", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
     <%= form.text_area :description, rows: 5,
           class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
+    <div class="mt-2">
+      <%= form.label :language, "Written in", class: "block text-xs font-medium text-stone-500 dark:text-stone-400 mb-1" %>
+      <%= form.select :language, Locale.select_options, {},
+            class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-2 py-1 text-sm" %>
+    </div>
   </div>
 
   <%= render "location_field", form: form, entry: @entry %>
@@ -65,6 +74,11 @@
   <%= render "who_else_field", trip: @trip, entry: @entry, exclude_user_id: @entry.created_by_id %>
 
   <%= render "datetime_field", form: form, entry: @entry %>
+
+  <div class="flex items-center gap-2">
+    <%= form.check_box :hidden, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700" %>
+    <%= form.label :hidden, "Hidden (won't show on the map or entry list for others)", class: "text-sm text-stone-600 dark:text-stone-300" %>
+  </div>
 
   <%= form.submit "Save changes", class: "rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
 <% end %>

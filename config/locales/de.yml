@@ -1,0 +1,20 @@
+# See config/locales/en.yml for how this file is used, and for the note on
+# scope: only a small slice of the app is translated so far. Keep this file's
+# key tree identical to en.yml's as more strings are migrated over time -
+# config.i18n.fallbacks (config/application.rb) means a key missed here
+# degrades to English rather than showing blank/raising.
+
+de:
+  hello: "Hallo Welt"
+  layout:
+    sign_in: "Anmelden"
+    sign_up: "Registrieren"
+    my_trips: "Meine Reisen"
+    admin: "Admin"
+  shared:
+    locale_modal:
+      choose_language: "Sprache wählen"
+  settings:
+    edit:
+      title: "Einstellungen"
+      language_label: "Sprache"

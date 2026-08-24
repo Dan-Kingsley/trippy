@@ -17,6 +17,6 @@ class SettingsController < ApplicationController
 
   private
     def user_params
-      params.require(:user).permit(:username, :password, :password_confirmation, :profile_picture)
+      params.require(:user).permit(:username, :password, :password_confirmation, :profile_picture, :locale)
     end
 end
