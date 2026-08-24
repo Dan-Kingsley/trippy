@@ -1,12 +1,12 @@
-<% content_for :title, "My trips - Trippy" %>
+<% content_for :title, "#{t("trips.index.title")} - Trippy" %>
 
 <div class="flex items-center justify-between mb-6">
-  <h1 class="font-bold text-3xl text-stone-800 dark:text-stone-100">My trips</h1>
+  <h1 class="font-bold text-3xl text-stone-800 dark:text-stone-100"><%= t("trips.index.heading") %></h1>
   <div class="flex gap-2">
     <% if @trips.any? %>
-      <%= link_to "Export all", trips_export_path, class: "rounded-md px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium" %>
+      <%= link_to t("trips.index.export_all"), trips_export_path, class: "rounded-md px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-medium" %>
     <% end %>
-    <%= link_to "New trip", new_trip_path, class: "rounded-md px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white font-medium" %>
+    <%= link_to t("trips.index.new_trip"), new_trip_path, class: "rounded-md px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white font-medium" %>
   </div>
 </div>
 
@@ -17,5 +17,5 @@
     <% end %>
   </div>
 <% else %>
-  <p class="text-stone-500 dark:text-stone-400">You haven't created any trips yet.</p>
+  <p class="text-stone-500 dark:text-stone-400"><%= t("trips.index.empty") %></p>
 <% end %>

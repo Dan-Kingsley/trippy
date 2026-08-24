@@ -10,9 +10,9 @@ class PhotosController < ApplicationController
 
     if rejected.positive?
       redirect_to edit_trip_trip_entry_path(@trip, @entry),
-        alert: "#{rejected} #{'file'.pluralize(rejected)} couldn't be added - only photo and video files are supported."
+        alert: t("photos.rejected", count: t("counts.file", count: rejected))
     else
-      redirect_to edit_trip_trip_entry_path(@trip, @entry), notice: "Photos added."
+      redirect_to edit_trip_trip_entry_path(@trip, @entry), notice: t("photos.added")
     end
   end
 
@@ -24,7 +24,7 @@ class PhotosController < ApplicationController
 
   def destroy
     @entry.photos.find(params[:id]).destroy
-    redirect_to edit_trip_trip_entry_path(@trip, @entry), notice: "Photo removed."
+    redirect_to edit_trip_trip_entry_path(@trip, @entry), notice: t("photos.removed")
   end
 
   private
@@ -35,7 +35,7 @@ class PhotosController < ApplicationController
 
     def require_editor
       unless Current.user.can_edit?(@trip)
-        redirect_to trip_path(@trip), alert: "You don't have edit access to this trip."
+        redirect_to trip_path(@trip), alert: t("photos.not_editor")
       end
     end
 end

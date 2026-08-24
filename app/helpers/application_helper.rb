@@ -62,15 +62,23 @@ module ApplicationHelper
     return nil unless range
 
     first, last = range.map(&:to_date)
-    return first.strftime("%-d %b %Y") if first == last
+    return l(first, format: :trippy_short) if first == last
 
     if first.year == last.year && first.month == last.month
-      "#{first.strftime('%-d')}-#{last.strftime('%-d %b %Y')}"
+      "#{first.strftime('%-d')}-#{l(last, format: :trippy_short)}"
     elsif first.year == last.year
-      "#{first.strftime('%-d %b')} - #{last.strftime('%-d %b %Y')}"
+      "#{l(first, format: :trippy_day_month)} - #{l(last, format: :trippy_short)}"
     else
-      "#{first.strftime('%-d %b %Y')} - #{last.strftime('%-d %b %Y')}"
+      "#{l(first, format: :trippy_short)} - #{l(last, format: :trippy_short)}"
     end
+  end
+
+  # Builds the translated strings the photo-date Stimulus controller needs
+  # for its client-side EXIF-preview status message and upload progress
+  # labels, passed down as a JSON data value since JS has no direct access
+  # to Rails i18n.
+  def photo_date_translations
+    t("javascript.photo_date")
   end
 
   # Thumbnail URL for a trip-map marker popup. Videos have no :thumb image

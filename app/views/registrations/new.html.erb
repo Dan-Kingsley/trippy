@@ -1,8 +1,8 @@
-<% content_for :title, "Sign up - Trippy" %>
+<% content_for :title, "#{t("registrations.new.title")} - Trippy" %>
 
 <div class="mx-auto max-w-sm w-full py-8">
-  <h1 class="font-bold text-3xl mb-2 text-stone-800 dark:text-stone-100">Create an account</h1>
-  <p class="text-sm text-stone-500 dark:text-stone-400 mb-6">Lets you leave comments and reactions on trips. Adventurer access (to create your own trips) is granted separately by an admin.</p>
+  <h1 class="font-bold text-3xl mb-2 text-stone-800 dark:text-stone-100"><%= t("registrations.new.heading") %></h1>
+  <p class="text-sm text-stone-500 dark:text-stone-400 mb-6"><%= t("registrations.new.description") %></p>
 
   <% if @user.errors.any? %>
     <div class="mb-4 rounded-lg bg-red-50 dark:bg-red-900/40 px-4 py-2.5 text-red-600 dark:text-red-300 text-sm">
@@ -25,19 +25,19 @@
       <%= form.label :password, class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
       <%= form.password_field :password, required: true, autocomplete: "new-password", maxlength: 72,
             class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
-      <p class="text-xs text-stone-400 mt-1">At least 8 characters.</p>
+      <p class="text-xs text-stone-400 mt-1"><%= t("registrations.new.password_hint") %></p>
     </div>
 
     <div>
-      <%= form.label :password_confirmation, "Confirm password", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+      <%= form.label :password_confirmation, t("registrations.new.confirm_password_label"), class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
       <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", maxlength: 72,
             class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
     </div>
 
-    <%= form.submit "Sign up", class: "w-full rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
+    <%= form.submit t("registrations.new.submit"), class: "w-full rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
   <% end %>
 
   <p class="mt-6 text-sm text-stone-500 dark:text-stone-400">
-    Already have an account? <%= link_to "Sign in", new_session_path, class: "text-amber-700 dark:text-amber-400 underline" %>
+    <%= t("registrations.new.already_have_account") %> <%= link_to t("registrations.new.sign_in"), new_session_path, class: "text-amber-700 dark:text-amber-400 underline" %>
   </p>
 </div>

@@ -4,7 +4,7 @@ class FavoritesController < ApplicationController
 
   def create
     unless trip_accessible?(@trip)
-      redirect_to root_path, alert: "This trip is private." and return
+      redirect_to root_path, alert: t("favorites.private_alert") and return
     end
 
     @trip.favorites.find_or_create_by(user: Current.user)

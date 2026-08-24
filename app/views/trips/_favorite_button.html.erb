@@ -2,5 +2,5 @@
 <%= button_to (favorited ? "★" : "☆"), trip_favorite_path(trip), method: (favorited ? :delete : :post),
       form_class: "contents",
       class: local_assigns[:css_class] || "rounded-full w-9 h-9 flex items-center justify-center text-lg bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 cursor-pointer #{favorited ? 'text-amber-500' : 'text-stone-400 dark:text-stone-500'}",
-      aria: { label: favorited ? "Remove from favourites" : "Add to favourites" },
-      title: favorited ? "Remove from favourites" : "Add to favourites" %>
+      aria: { label: favorited ? t("trips.show.remove_from_favourites") : t("trips.show.add_to_favourites") },
+      title: favorited ? t("trips.show.remove_from_favourites") : t("trips.show.add_to_favourites") %>

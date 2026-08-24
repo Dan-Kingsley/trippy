@@ -1,12 +1,13 @@
-<% content_for :title, "New entry - #{@trip.title} - Trippy" %>
+<% content_for :title, "#{t("trip_entries.new.title", trip_title: @trip.title)} - Trippy" %>
 <% content_for :head do %>
   <%= stylesheet_link_tag "leaflet", "data-turbo-track": "reload" %>
 <% end %>
 
-<h1 class="font-bold text-3xl mb-6 text-stone-800 dark:text-stone-100">New entry</h1>
+<h1 class="font-bold text-3xl mb-6 text-stone-800 dark:text-stone-100"><%= t("trip_entries.new.heading") %></h1>
 
 <%= form_with model: @entry, url: trip_trip_entries_path(@trip), multipart: true, class: "space-y-6 max-w-lg",
-      data: { controller: "photo-date", photo_date_direct_upload_url_value: rails_direct_uploads_path } do |form| %>
+      data: { controller: "photo-date", photo_date_direct_upload_url_value: rails_direct_uploads_path,
+              photo_date_translations_value: photo_date_translations.to_json } do |form| %>
   <% if @entry.errors.any? %>
     <div class="rounded-lg bg-red-50 dark:bg-red-900/40 px-4 py-2.5 text-red-600 dark:text-red-300 text-sm">
       <ul class="list-disc list-inside">
@@ -22,24 +23,24 @@
   </div>
 
   <div>
-    <%= form.label :description, "Description (Markdown supported)", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+    <%= form.label :description, t("trip_entries.new.description_label"), class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
     <%= form.text_area :description, rows: 5,
           class: "block w-full rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 focus:outline-2 focus:outline-amber-600" %>
     <div class="mt-2">
-      <%= form.label :language, "Written in", class: "block text-xs font-medium text-stone-500 dark:text-stone-400 mb-1" %>
+      <%= form.label :language, t("trip_entries.new.written_in_label"), class: "block text-xs font-medium text-stone-500 dark:text-stone-400 mb-1" %>
       <%= form.select :language, Locale.select_options, {},
             class: "rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-2 py-1 text-sm" %>
     </div>
   </div>
 
   <div>
-    <%= form.label :photos, "Photos & videos", class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
+    <%= form.label :photos, t("trip_entries.new.photos_label"), class: "block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1" %>
     <label for="entry_photos" class="inline-flex items-center gap-2 rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer">
-      📷 <span data-photo-date-target="fileCount">Upload photos or videos</span>
+      <span data-photo-date-target="fileCount"><%= t("trip_entries.new.upload_button") %></span>
     </label>
     <input type="file" id="entry_photos" name="photos[]" multiple accept="image/*,video/*" class="sr-only"
            data-photo-date-target="input" data-action="change->photo-date#preview">
-    <p class="text-xs text-stone-400 mt-1">Location and date are read automatically from each photo, unless you override them below. You can also paste an image from your clipboard anywhere in this form.</p>
+    <p class="text-xs text-stone-400 mt-1"><%= t("trip_entries.new.help_text") %></p>
     <p data-photo-date-target="status" class="hidden text-xs mt-1 text-amber-700 dark:text-amber-400"></p>
     <div data-photo-date-target="uploadList" class="hidden mt-2 space-y-1"></div>
   </div>
@@ -50,6 +51,6 @@
 
   <%= render "datetime_field", form: form, entry: @entry %>
 
-  <%= form.submit "Add entry", data: { photo_date_target: "submit" },
+  <%= form.submit t("trip_entries.new.submit"), data: { photo_date_target: "submit" },
         class: "rounded-md px-4 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-medium cursor-pointer" %>
 <% end %>

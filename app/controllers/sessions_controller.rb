@@ -1,6 +1,6 @@
 class SessionsController < ApplicationController
   before_action :require_authentication, only: :destroy
-  rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_session_path, alert: "Try again later." }
+  rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_session_path, alert: t("sessions.new.try_again_later") }
 
   def new
   end
@@ -10,7 +10,7 @@ class SessionsController < ApplicationController
       start_new_session_for user
       redirect_to after_authentication_url
     else
-      redirect_to new_session_path, alert: "Try another username or password."
+      redirect_to new_session_path, alert: t("sessions.new.invalid_credentials")
     end
   end
 

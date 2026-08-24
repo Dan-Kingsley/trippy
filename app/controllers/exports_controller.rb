@@ -13,7 +13,7 @@ class ExportsController < ApplicationController
     def export_single_trip
       trip = Trip.find_by!(slug: params[:trip_slug])
       unless Current.user.can_edit?(trip)
-        redirect_to trip_path(trip), alert: "You don't have edit access to this trip." and return
+        redirect_to trip_path(trip), alert: t("exports.not_editor") and return
       end
 
       stream_zip([ trip ], "trippy-#{trip.slug}-#{Date.current.iso8601}.zip")

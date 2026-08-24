@@ -108,7 +108,7 @@ class Trip < ApplicationRecord
       return unless cover_photo.attached?
       return if cover_photo.content_type.in?(MediaContentTypes::IMAGES)
 
-      errors.add(:cover_photo, "must be a supported photo format")
+      errors.add(:cover_photo, :invalid_content_type)
     end
 
     # trip_entries is ordered ascending by occurred_at, so the latest entry

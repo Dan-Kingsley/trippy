@@ -4,7 +4,7 @@ class ReactionsController < ApplicationController
 
   def create
     unless trip_accessible?(@trip)
-      redirect_to root_path, alert: "This trip is private." and return
+      redirect_to root_path, alert: t("reactions.flashes.private_alert") and return
     end
 
     emoji = params[:emoji]

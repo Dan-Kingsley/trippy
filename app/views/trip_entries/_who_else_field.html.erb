@@ -1,7 +1,7 @@
 <% others = trip.editors.where.not(id: exclude_user_id).order(:username) %>
 <% if others.any? %>
   <div>
-    <p class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1">Who else was there?</p>
+    <p class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1"><%= t("trip_entries.who_else_field.heading") %></p>
     <div class="space-y-1.5">
       <% others.each do |user| %>
         <label class="flex items-center gap-2 text-sm text-stone-700 dark:text-stone-200">

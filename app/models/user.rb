@@ -23,7 +23,7 @@ class User < ApplicationRecord
   normalizes :username, with: ->(value) { value.strip.downcase }
 
   validates :username, presence: true, uniqueness: true,
-    format: { with: /\A[a-z0-9_.-]+\z/, message: "can only contain letters, numbers, dots, dashes and underscores" }
+    format: { with: /\A[a-z0-9_.-]+\z/, message: :invalid_format }
   validates :password, length: { minimum: 8 }, allow_nil: true
   validates :locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
   validate :acceptable_profile_picture_content_type
@@ -62,6 +62,6 @@ class User < ApplicationRecord
       return unless profile_picture.attached?
       return if profile_picture.content_type.in?(MediaContentTypes::IMAGES)
 
-      errors.add(:profile_picture, "must be a supported photo format")
+      errors.add(:profile_picture, :invalid_content_type)
     end
 end

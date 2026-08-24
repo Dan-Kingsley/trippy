@@ -27,7 +27,7 @@ module Authentication
     def require_adventurer
       require_authentication
       unless performed? || Current.user&.adventurer?
-        redirect_to root_path, alert: "You need adventurer access for that."
+        redirect_to root_path, alert: t("authentication.adventurer_required")
       end
     end
 
@@ -43,7 +43,7 @@ module Authentication
       # A POST/DELETE URL (e.g. adding a reaction) isn't a page to revisit -
       # send them back to wherever the request came from instead.
       session[:return_to_after_authenticating] = request.get? ? request.url : request.referer
-      redirect_to new_session_path, alert: "Sign in to do that."
+      redirect_to new_session_path, alert: t("authentication.sign_in_required")
     end
 
     def after_authentication_url

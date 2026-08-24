@@ -15,7 +15,7 @@ class Reaction < ApplicationRecord
       return if emoji.blank?
 
       unless emoji.grapheme_clusters.one? && emoji.match?(/\p{Emoji}/)
-        errors.add(:emoji, "must be a single emoji")
+        errors.add(:emoji, :invalid)
       end
     end
 end

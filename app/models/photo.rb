@@ -33,7 +33,7 @@ class Photo < ApplicationRecord
       return unless image.attached?
       return if image.content_type.in?(MediaContentTypes::ALL)
 
-      errors.add(:image, "must be a supported photo or video format")
+      errors.add(:image, :invalid_content_type)
     end
 
     def extract_exif_later

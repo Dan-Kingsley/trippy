@@ -9,12 +9,12 @@
         <p class="text-sm text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-2"><%= truncate(trip.description, length: 120) %></p>
       <% end %>
       <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
-        <%= pluralize(trip.trip_entries.size, "entry") %>
+        <%= t("counts.entry", count: trip.trip_entries.size) %>
         <% if (date_range = trip_date_range_text(trip)) %>
           &middot; <%= date_range %>
         <% end %>
-        <% unless trip.public? %> &middot; <span class="inline-flex items-center gap-1">🔒 Private</span><% end %>
-        <% if trip.hidden? %> &middot; <span class="inline-flex items-center gap-1">🙈 Hidden</span><% end %>
+        <% unless trip.public? %> &middot; <span class="inline-flex items-center gap-1">🔒 <%= t("trips.card.private") %></span><% end %>
+        <% if trip.hidden? %> &middot; <span class="inline-flex items-center gap-1">🙈 <%= t("trips.card.hidden") %></span><% end %>
       </p>
       <div class="flex -space-x-2 mt-2">
         <% trip.editors.each do |user| %>

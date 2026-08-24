@@ -27,23 +27,399 @@
 #       "yes": yup
 #       enabled: "ON"
 #
-# Only a small, high-traffic slice of the app is translated so far (layout
-# chrome, the settings page, the language picker itself) - most views are
-# still literal English strings, which is unchanged existing behavior, not a
-# regression. Keep en.yml and de.yml structurally identical (same key tree)
-# as more strings are migrated over time.
+# Every user-facing string in the app is translated (see de.yml). Keep the two
+# files' key trees identical as new UI is added - config.i18n.fallbacks
+# (config/application.rb) means a key missed in de.yml degrades to English
+# rather than showing blank/raising, so a drift is silent unless checked for.
 
 en:
-  hello: "Hello world"
+  authentication:
+    adventurer_required: "You need adventurer access for that."
+    sign_in_required: "Sign in to do that."
+
   layout:
     sign_in: "Sign in"
     sign_up: "Sign up"
     my_trips: "My Trips"
     admin: "Admin"
+    toggle_dark_mode: "Toggle dark mode"
+
   shared:
+    close: "Close"
+    danger_zone: "Danger zone"
     locale_modal:
       choose_language: "Choose your language"
+      choose_language_aria: "Choose language"
+    private_access_modal:
+      trigger_aria: "Enter a private trip code"
+      heading: "Have a private trip code?"
+      code_placeholder: "Enter 32-character code"
+      view_trip: "View trip"
+      remembered_note: "Codes you enter (or open via a shared link) are remembered on this device."
+
+  counts:
+    entry:
+      one: "%{count} entry"
+      other: "%{count} entries"
+    favourite:
+      one: "%{count} favourite"
+      other: "%{count} favourites"
+    view:
+      one: "%{count} view"
+      other: "%{count} views"
+    comment:
+      one: "%{count} comment"
+      other: "%{count} comments"
+    reaction:
+      one: "%{count} reaction"
+      other: "%{count} reactions"
+    photo:
+      one: "%{count} photo"
+      other: "%{count} photos"
+    file:
+      one: "%{count} file"
+      other: "%{count} files"
+    trip:
+      one: "%{count} trip"
+      other: "%{count} trips"
+    item:
+      one: "%{count} item"
+      other: "%{count} items"
+
+  home:
+    index:
+      title: "Trippy"
+      favourites_tab: "Favourites"
+      all_tab: "All"
+      no_favourites_prefix: "You haven't favourited any trips yet. Browse"
+      all_trips_link: "all trips"
+      no_favourites_suffix: "to find ones to follow."
+      no_trips: "No trips yet."
+
+  sessions:
+    new:
+      title: "Sign in"
+      heading: "Sign in"
+      submit: "Sign in"
+      new_here: "New here?"
+      create_account: "Create an account"
+      to_comment: "to comment and react on trips."
+      try_again_later: "Try again later."
+      invalid_credentials: "Try another username or password."
+
+  registrations:
+    new:
+      title: "Sign up"
+      heading: "Create an account"
+      description: "Lets you leave comments and reactions on trips. Adventurer access (to create your own trips) is granted separately by an admin."
+      password_hint: "At least 8 characters."
+      confirm_password_label: "Confirm password"
+      submit: "Sign up"
+      already_have_account: "Already have an account?"
+      sign_in: "Sign in"
+    welcome_notice: "Welcome to Trippy, %{username}!"
+
   settings:
     edit:
       title: "Settings"
       language_label: "Language"
+      profile_picture_label: "Profile picture"
+      change_password: "Change password"
+      change_password_hint: "(leave blank to keep your current password)"
+      new_password_label: "New password"
+      confirm_new_password_label: "Confirm new password"
+      password_hint: "At least 8 characters."
+      save: "Save changes"
+      import_trips: "Import trips"
+      import_description: "Restore trips from a .zip file exported from Trippy (this or another instance)."
+      archive_label: "Trippy export (.zip)"
+      conflict_legend: "If an imported trip matches one you already own"
+      conflict_overwrite: "Overwrite the matching trip"
+      conflict_overwrite_hint: "(replaces its entries, photos, comments and reactions entirely)"
+      conflict_duplicate: "Import alongside as a new copy"
+      conflict_duplicate_hint: "(keeps both; the copy won't be recognized as \"the same trip\" on future imports)"
+      import_submit: "Import"
+      sign_out: "Sign out"
+    updated_notice: "Settings updated."
+
+  trips:
+    index:
+      title: "My trips"
+      heading: "My trips"
+      export_all: "Export all"
+      new_trip: "New trip"
+      empty: "You haven't created any trips yet."
+    new:
+      title: "New trip"
+      heading: "New trip"
+    edit:
+      title: "Edit %{title}"
+      heading: "Edit trip"
+      collaborators_heading: "Collaborators"
+      owner_label: "Owner:"
+      username_placeholder: "adventurer's username"
+      add_collaborator: "Add"
+      remove: "Remove"
+      adventurer_note: "Only existing adventurer accounts can be added."
+      private_access_heading: "Private access"
+      private_access_description: "Share this link so people can view the trip without logging in:"
+      delete: "Delete trip"
+      delete_confirm: "Delete \"%{title}\" and all its entries, photos, and comments? This can't be undone."
+    form:
+      blurb_label: "Blurb"
+      blurb_placeholder: "A short description of this trip (300 characters max)"
+      public_label: "Public (listed on the homepage for everyone)"
+      hidden_label: "Hidden (won't show up in trip listings, but direct/shared links still work)"
+      cover_photo_heading: "Cover photo"
+      cover_auto: "Automatic — the latest entry's photo"
+      cover_choose_existing: "Choose one of this trip's photos"
+      cover_upload_new: "Upload a new photo"
+      save: "Save changes"
+      create: "Create trip"
+    card:
+      private: "Private"
+      hidden: "Hidden"
+    show:
+      title: "%{title}"
+      public_trip: "Public trip"
+      private_trip: "Private trip"
+      share: "Share"
+      add_entry: "Add entry"
+      edit_trip: "Edit trip"
+      export: "Export"
+      actions_aria: "Trip actions"
+      share_heading: "Share this trip"
+      share_public_note: "Share this link so anyone can view this trip:"
+      share_private_note: "Share this link so others can view without logging in:"
+      copy: "Copy"
+      copied: "Copied!"
+      about_heading: "About this trip"
+      entries_heading: "Entries"
+      unlocated_prefix: "without a location yet:"
+      hidden_entry_title: "Hidden from non-collaborators"
+      add_to_favourites: "Add to favourites"
+      remove_from_favourites: "Remove from favourites"
+    flashes:
+      private_alert: "This trip is private. Enter its access code to view it."
+      created: "Trip created. Start adding entries!"
+      updated: "Trip updated."
+      deleted: "Trip deleted."
+      not_editor: "You don't have edit access to this trip."
+      only_owner: "Only the trip owner can do that."
+
+  trip_entries:
+    new:
+      title: "New entry - %{trip_title}"
+      heading: "New entry"
+      description_label: "Description (Markdown supported)"
+      written_in_label: "Written in"
+      photos_label: "Photos & videos"
+      upload_button: "📷 Upload photos or videos"
+      help_text: "Location and date are read automatically from each photo, unless you override them below. You can also paste an image from your clipboard anywhere in this form."
+      submit: "Add entry"
+    edit:
+      title: "Edit entry - %{trip_title}"
+      heading: "Edit entry"
+      photos_heading: "Photos"
+      photos_hint: "(drag to reorder — first photo is used as the entry/trip thumbnail)"
+      processing_failed_title: "This photo failed to process - try removing and re-uploading it."
+      remove_photo_confirm: "Remove this photo?"
+      add_more_label: "Add more photos or videos"
+      choose_button: "📷 Choose photos or videos"
+      upload_button: "Upload"
+      paste_hint: "You can also paste an image from your clipboard anywhere in this form."
+      description_label: "Description (Markdown supported)"
+      written_in_label: "Written in"
+      hidden_label: "Hidden (won't show on the map or entry list for others)"
+      save: "Save changes"
+      delete: "Delete entry"
+      delete_confirm: "Delete this entry and its photos?"
+    show:
+      title: "%{entry_title} - %{trip_title}"
+      back_to_trip: "%{trip_title}"
+      edit: "Edit entry"
+      previous_photo: "Previous photo"
+      next_photo: "Next photo"
+      go_to_photo: "Go to photo %{number}"
+      restart_video: "Restart video"
+      add_reaction_aria: "Add another reaction"
+      recent_tab: "Recent"
+      all_tab: "All"
+      no_recent_reactions: "No recent reactions yet."
+      comment_placeholder: "Add a comment…"
+      post: "Post"
+      sign_in: "Sign in"
+      to_comment: "to comment or react."
+      comments_heading: "Comments"
+      no_comments: "No comments yet."
+    comment:
+      reply: "Reply"
+      delete: "Delete"
+      reply_placeholder: "Reply…"
+      delete_confirm: "Delete this comment?"
+    datetime_field:
+      automatic_label: "📅 Automatic date & time (from photos):"
+      none_found: "No date/time found in your photos yet."
+      manual_label: "Manually set date & time"
+      now: "Now"
+      help_text: "Used to order entries chronologically. Defaults to the upload time if no photo date is found. Only visible to you."
+    location_field:
+      label: "Location"
+      automatic: "Automatic — average location from your photos' GPS data"
+      averaged_prefix: "Averaged from"
+      averaged_suffix: "with location data."
+      none_found: "No location data found in your photos yet."
+      use_photo: "Use one of your photos' locations"
+      manual_pick: "Manually pick on a map"
+      manual_pick_hint: "Drag the map until the pin marks the right spot."
+    who_else_field:
+      heading: "Who else was there?"
+    flashes:
+      hidden_alert: "This entry is hidden."
+      entry_added: "Entry added."
+      entry_added_rejected: "Entry added, but %{count} couldn't be attached - only photo and video files are supported."
+      entry_updated: "Entry updated."
+      entry_updated_rejected: "Entry updated, but %{count} couldn't be attached - only photo and video files are supported."
+      entry_deleted: "Entry deleted."
+      not_editor: "You don't have edit access to this trip."
+      not_entry_creator: "You don't have access to add entries to this trip."
+
+  reactions:
+    reactor_list:
+      heading: "%{emoji} reactions"
+      empty: "No one has reacted with this emoji."
+    flashes:
+      private_alert: "This trip is private."
+
+  admin:
+    users:
+      index:
+        title: "Admin - Users"
+        heading: "Users"
+        grant_label: "Grant adventurer access by username"
+        username_placeholder: "username"
+        grant: "Grant"
+        username_column: "Username"
+        joined_column: "Joined"
+        adventurer_column: "Adventurer"
+        admin_column: "Admin"
+        revoke: "Revoke"
+        you: "you"
+      updated: "Updated %{username}."
+      granted_adventurer: "%{username} is now an adventurer."
+      user_not_found: "No user found with that username."
+      not_authorized: "Not authorized."
+
+  trip_collaborators:
+    not_found: "No adventurer found with that username."
+    added: "%{username} can now edit this trip."
+    removed: "Collaborator removed."
+    only_owner: "Only the trip owner can manage collaborators."
+
+  private_accesses:
+    try_again_later: "Try again later."
+    invalid_code: "That code doesn't match any private trip."
+
+  comments:
+    private_alert: "This trip is private."
+    removed: "Comment removed."
+    not_authorized: "You can't remove that comment."
+
+  favorites:
+    private_alert: "This trip is private."
+
+  imports:
+    choose_file: "Choose a .zip file to import."
+    too_large: "That file is too large to import."
+    failed: "Import failed: %{error}"
+    imported: "imported %{count}"
+    overwrote: "overwrote %{count}"
+    failed_count: "%{count} failed to import"
+    nothing_imported: "Nothing was imported."
+    warnings: "%{count} skipped (unresolved users or invalid files)."
+
+  exports:
+    not_editor: "You don't have edit access to this trip."
+
+  photos:
+    rejected: "%{count} couldn't be added - only photo and video files are supported."
+    added: "Photos added."
+    removed: "Photo removed."
+    not_editor: "You don't have edit access to this trip."
+
+  javascript:
+    photo_date:
+      reading: "Reading photo date & location…"
+      found_date: "📅 %{datetime}"
+      found_location: "📍 location"
+      and: "and"
+      or: "or"
+      read_from_photos: "— read from your photos."
+      no_prefix: "No"
+      no_suffix:
+        one: "found in your photos — you can set it manually below."
+        other: "found in your photos — you can set them manually below."
+      date_word: "date"
+      location_word: "location"
+      upload_failed: "%{filename} — upload failed (%{error})"
+      file_selected:
+        one: "%{count} file selected"
+        other: "%{count} files selected"
+    reaction_users:
+      loading: "Loading…"
+      load_failed: "Couldn't load who reacted. Try again."
+
+  date:
+    formats:
+      trippy_short: "%-d %b %Y"
+      trippy_day_month: "%-d %b"
+  time:
+    formats:
+      trippy_short: "%-d %b %Y, %-l:%M %p"
+
+  activerecord:
+    attributes:
+      user:
+        username: "Username"
+        password: "Password"
+        password_confirmation: "Password confirmation"
+        profile_picture: "Profile picture"
+      trip:
+        title: "Title"
+        description: "Description"
+        cover_photo: "Cover photo"
+      trip_entry:
+        title: "Title"
+        description: "Description"
+      comment:
+        body: "Body"
+        parent: "Parent"
+      reaction:
+        emoji: "Emoji"
+      photo:
+        image: "Image"
+    errors:
+      models:
+        user:
+          attributes:
+            username:
+              invalid_format: "can only contain letters, numbers, dots, dashes and underscores"
+            profile_picture:
+              invalid_content_type: "must be a supported photo format"
+        trip:
+          attributes:
+            cover_photo:
+              invalid_content_type: "must be a supported photo format"
+        photo:
+          attributes:
+            image:
+              invalid_content_type: "must be a supported photo or video format"
+        reaction:
+          attributes:
+            emoji:
+              invalid: "must be a single emoji"
+        comment:
+          attributes:
+            parent:
+              wrong_entry: "must belong to the same entry"
+              nested_reply: "can't itself be a reply"

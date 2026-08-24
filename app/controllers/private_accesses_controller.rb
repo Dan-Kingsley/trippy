@@ -1,5 +1,5 @@
 class PrivateAccessesController < ApplicationController
-  rate_limit to: 20, within: 3.minutes, only: :create, with: -> { redirect_to root_path, alert: "Try again later." }
+  rate_limit to: 20, within: 3.minutes, only: :create, with: -> { redirect_to root_path, alert: t("private_accesses.try_again_later") }
 
   def create
     code = params[:code].to_s.strip
@@ -10,7 +10,7 @@ class PrivateAccessesController < ApplicationController
       grant_trip_access!(trip)
       redirect_to trip_path(trip)
     else
-      redirect_to root_path, alert: "That code doesn't match any private trip."
+      redirect_to root_path, alert: t("private_accesses.invalid_code")
     end
   end
 end

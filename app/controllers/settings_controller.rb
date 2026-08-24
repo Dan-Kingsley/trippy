@@ -9,7 +9,7 @@ class SettingsController < ApplicationController
     @user = Current.user
     if @user.update(user_params)
       ProfilePictureVariantJob.perform_later(@user.id) if user_params[:profile_picture].present?
-      redirect_to edit_settings_path, notice: "Settings updated."
+      redirect_to edit_settings_path, notice: t("settings.updated_notice")
     else
       render :edit, status: :unprocessable_entity
     end

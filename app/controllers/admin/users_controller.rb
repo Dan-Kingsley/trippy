@@ -8,16 +8,16 @@ class Admin::UsersController < ApplicationController
   def update
     user = User.find(params[:id])
     user.update!(user_params)
-    redirect_to admin_users_path, notice: "Updated #{user.username}."
+    redirect_to admin_users_path, notice: t("admin.users.updated", username: user.username)
   end
 
   def grant_adventurer
     user = User.find_by(username: params[:username].to_s.strip.downcase)
     if user
       user.update!(adventurer: true)
-      redirect_to admin_users_path, notice: "#{user.username} is now an adventurer."
+      redirect_to admin_users_path, notice: t("admin.users.granted_adventurer", username: user.username)
     else
-      redirect_to admin_users_path, alert: "No user found with that username."
+      redirect_to admin_users_path, alert: t("admin.users.user_not_found")
     end
   end
 
@@ -27,6 +27,6 @@ class Admin::UsersController < ApplicationController
     end
 
     def require_admin
-      redirect_to root_path, alert: "Not authorized." unless Current.user&.admin?
+      redirect_to root_path, alert: t("admin.users.not_authorized") unless Current.user&.admin?
     end
 end

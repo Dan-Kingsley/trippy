@@ -14,7 +14,7 @@ class TripsController < ApplicationController
     end
 
     unless trip_accessible?(@trip)
-      redirect_to root_path, alert: "This trip is private. Enter its access code to view it." and return
+      redirect_to root_path, alert: t("trips.flashes.private_alert") and return
     end
 
     @editable = Current.user&.can_edit?(@trip) || false
@@ -38,7 +38,7 @@ class TripsController < ApplicationController
 
     if @trip.save
       CoverPhotoVariantJob.perform_later(@trip.id) if trip_params[:cover_photo].present?
-      redirect_to trip_path(@trip), notice: "Trip created. Start adding entries!"
+      redirect_to trip_path(@trip), notice: t("trips.flashes.created")
     else
       render :new, status: :unprocessable_entity
     end
@@ -50,7 +50,7 @@ class TripsController < ApplicationController
   def update
     if @trip.update(trip_params)
       CoverPhotoVariantJob.perform_later(@trip.id) if trip_params[:cover_photo].present?
-      redirect_to trip_path(@trip), notice: "Trip updated."
+      redirect_to trip_path(@trip), notice: t("trips.flashes.updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -58,7 +58,7 @@ class TripsController < ApplicationController
 
   def destroy
     @trip.destroy
-    redirect_to trips_path, notice: "Trip deleted.", status: :see_other
+    redirect_to trips_path, notice: t("trips.flashes.deleted"), status: :see_other
   end
 
   private
@@ -69,14 +69,14 @@ class TripsController < ApplicationController
     def require_editor
       require_authentication
       unless performed? || Current.user.can_edit?(@trip)
-        redirect_to trip_path(@trip), alert: "You don't have edit access to this trip."
+        redirect_to trip_path(@trip), alert: t("trips.flashes.not_editor")
       end
     end
 
     def require_owner_or_admin
       require_authentication
       unless performed? || Current.user.admin? || @trip.owner_id == Current.user.id
-        redirect_to trip_path(@trip), alert: "Only the trip owner can do that."
+        redirect_to trip_path(@trip), alert: t("trips.flashes.only_owner")
       end
     end
 

@@ -11,7 +11,7 @@ class Comment < ApplicationRecord
   private
     def parent_is_a_top_level_comment_in_the_same_entry
       return if parent.nil?
-      errors.add(:parent, "must belong to the same entry") if parent.trip_entry_id != trip_entry_id
-      errors.add(:parent, "can't itself be a reply") if parent.parent_id.present?
+      errors.add(:parent, :wrong_entry) if parent.trip_entry_id != trip_entry_id
+      errors.add(:parent, :nested_reply) if parent.parent_id.present?
     end
 end

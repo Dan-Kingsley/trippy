@@ -1,4 +1,4 @@
-<% content_for :title, "#{@trip.title} - Trippy" %>
+<% content_for :title, "#{t("trips.show.title", title: @trip.title)} - Trippy" %>
 <% content_for :head do %>
   <%= stylesheet_link_tag "leaflet", "data-turbo-track": "reload" %>
 <% end %>
@@ -7,9 +7,9 @@
   <div>
     <h1 class="font-bold text-3xl text-stone-800 dark:text-stone-100"><%= @trip.title %></h1>
     <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
-      <%= @trip.public? ? "Public trip" : "Private trip" %> &middot; <%= pluralize(@entries.size, "entry") %>
+      <%= @trip.public? ? t("trips.show.public_trip") : t("trips.show.private_trip") %> &middot; <%= t("counts.entry", count: @entries.size) %>
       <% if @editable %>
-        &middot; <%= pluralize(@trip.favorites_count, "favourite") %>
+        &middot; <%= t("counts.favourite", count: @trip.favorites_count) %>
       <% end %>
     </p>
     <div class="flex -space-x-2 mt-2">
@@ -29,17 +29,17 @@
         <!-- Actions row: full buttons from sm: up, collapsed into a hamburger menu below it -->
         <div class="hidden sm:flex gap-2">
           <% if @trip_member %>
-            <button type="button" data-action="modal#open" class="rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium cursor-pointer">Share</button>
+            <button type="button" data-action="modal#open" class="rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium cursor-pointer"><%= t("trips.show.share") %></button>
           <% end %>
           <% if @can_add_entries %>
-            <%= link_to "Add entry", new_trip_trip_entry_path(@trip), class: "rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium" %>
+            <%= link_to t("trips.show.add_entry"), new_trip_trip_entry_path(@trip), class: "rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium" %>
           <% end %>
-          <%= link_to "Edit trip", edit_trip_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
-          <%= link_to "Export", trip_export_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
+          <%= link_to t("trips.show.edit_trip"), edit_trip_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
+          <%= link_to t("trips.show.export"), trip_export_path(@trip), class: "rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium" %>
         </div>
 
         <div class="relative sm:hidden" data-controller="menu">
-          <button type="button" data-action="menu#toggle" aria-label="Trip actions" aria-haspopup="true"
+          <button type="button" data-action="menu#toggle" aria-label="<%= t("trips.show.actions_aria") %>" aria-haspopup="true"
             class="rounded-md w-10 h-10 flex items-center justify-center bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
               <path fill-rule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 5A.75.75 0 0 1 2.75 9h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 9.75Zm0 5A.75.75 0 0 1 2.75 14h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
@@ -48,13 +48,13 @@
 
           <div data-menu-target="panel" class="hidden absolute right-0 z-10 mt-1 w-44 rounded-lg shadow-lg overflow-hidden bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex flex-col py-1">
             <% if @trip_member %>
-              <button type="button" data-action="modal#open menu#close" class="text-left px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer">Share</button>
+              <button type="button" data-action="modal#open menu#close" class="text-left px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"><%= t("trips.show.share") %></button>
             <% end %>
             <% if @can_add_entries %>
-              <%= link_to "Add entry", new_trip_trip_entry_path(@trip), class: "px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800" %>
+              <%= link_to t("trips.show.add_entry"), new_trip_trip_entry_path(@trip), class: "px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800" %>
             <% end %>
-            <%= link_to "Edit trip", edit_trip_path(@trip), class: "px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800" %>
-            <%= link_to "Export", trip_export_path(@trip), class: "px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800" %>
+            <%= link_to t("trips.show.edit_trip"), edit_trip_path(@trip), class: "px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800" %>
+            <%= link_to t("trips.show.export"), trip_export_path(@trip), class: "px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800" %>
           </div>
         </div>
 
@@ -62,24 +62,24 @@
           <dialog data-modal-target="dialog" class="m-auto rounded-xl p-0 border-0 backdrop:bg-black/50 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100 w-full max-w-md">
             <div class="p-5">
               <div class="flex items-center justify-between mb-3">
-                <h2 class="font-bold text-xl">Share this trip</h2>
-                <button type="button" data-action="modal#close" aria-label="Close"
+                <h2 class="font-bold text-xl"><%= t("trips.show.share_heading") %></h2>
+                <button type="button" data-action="modal#close" aria-label="<%= t("shared.close") %>"
                   class="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer text-xl leading-none">&times;</button>
               </div>
               <p class="text-sm text-stone-500 dark:text-stone-400 mb-2">
                 <% if @trip.public? %>
-                  Share this link so anyone can view this trip:
+                  <%= t("trips.show.share_public_note") %>
                 <% else %>
-                  Share this link so others can view without logging in:
+                  <%= t("trips.show.share_private_note") %>
                 <% end %>
               </p>
-              <div class="flex gap-2" data-controller="clipboard">
+              <div class="flex gap-2" data-controller="clipboard" data-clipboard-copied-text-value="<%= t("trips.show.copied") %>">
                 <input type="text" readonly value="<%= @trip.public? ? trip_url(@trip) : trip_url(@trip, code: @trip.secret_code) %>"
                   data-clipboard-target="source"
                   class="flex-1 min-w-0 rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2 text-sm break-all focus:outline-2 focus:outline-amber-600"
                   onclick="this.select()">
                 <button type="button" data-action="clipboard#copy" data-clipboard-target="button"
-                  class="shrink-0 rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium cursor-pointer">Copy</button>
+                  class="shrink-0 rounded-md px-3 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-medium cursor-pointer"><%= t("trips.show.copy") %></button>
               </div>
             </div>
           </dialog>
@@ -91,7 +91,7 @@
 
 <% if @trip.description.present? %>
   <details class="mb-4 text-sm text-stone-600 dark:text-stone-300">
-    <summary class="cursor-pointer font-medium text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400">About this trip</summary>
+    <summary class="cursor-pointer font-medium text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400"><%= t("trips.show.about_heading") %></summary>
     <p class="mt-1.5 whitespace-pre-line max-w-2xl"><%= @trip.description %></p>
   </details>
 <% end %>
@@ -114,7 +114,7 @@
 <% unlocated = @entries.reject(&:located?) %>
 <% if @editable && unlocated.any? %>
   <div class="mt-4 rounded-lg bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-    <%= pluralize(unlocated.size, "entry") %> without a location yet:
+    <%= t("counts.entry", count: unlocated.size) %> <%= t("trips.show.unlocated_prefix") %>
     <% unlocated.each do |entry| %>
       <%= link_to entry.title, edit_trip_trip_entry_path(@trip, entry), class: "underline" %><%= ", " unless entry == unlocated.last %>
     <% end %>
@@ -122,7 +122,7 @@
 <% end %>
 
 <section class="mt-8">
-  <h2 class="font-semibold text-xl mb-3 text-stone-800 dark:text-stone-100">Entries</h2>
+  <h2 class="font-semibold text-xl mb-3 text-stone-800 dark:text-stone-100"><%= t("trips.show.entries_heading") %></h2>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <% @entries.to_a.reverse.each do |entry| %>
       <%= link_to trip_trip_entry_path(@trip, entry), class: "flex gap-3 items-center rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-3 hover:shadow-md transition-shadow" do %>
@@ -141,14 +141,14 @@
         <div class="min-w-0">
           <p class="font-medium text-stone-800 dark:text-stone-100 truncate">
             <%= entry.title %>
-            <% if entry.hidden? %><span title="Hidden from non-collaborators">🙈</span><% end %>
+            <% if entry.hidden? %><span title="<%= t("trips.show.hidden_entry_title") %>">🙈</span><% end %>
           </p>
           <p class="text-xs text-stone-500 dark:text-stone-400">
-            <%= entry.occurred_at&.to_date&.strftime("%-d %b %Y") %>
+            <%= entry.occurred_at && l(entry.occurred_at.to_date, format: :trippy_short) %>
             <% if @trip_member %>
-              &middot; <%= pluralize(entry.views_count, "view") %>
-              &middot; <%= pluralize(entry.comments_count, "comment") %>
-              &middot; <%= pluralize(entry.reactions_count, "reaction") %>
+              &middot; <%= t("counts.view", count: entry.views_count) %>
+              &middot; <%= t("counts.comment", count: entry.comments_count) %>
+              &middot; <%= t("counts.reaction", count: entry.reactions_count) %>
             <% end %>
           </p>
         </div>

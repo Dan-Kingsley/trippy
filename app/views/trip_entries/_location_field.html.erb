@@ -3,11 +3,11 @@
 <% selected_photo = located_photos.detect { |p| p.id == entry.location_photo_id } || located_photos.first %>
 
 <div data-controller="radio-toggle" data-action="change->radio-toggle#sync">
-  <p class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1">Location</p>
+  <p class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1"><%= t("trip_entries.location_field.label") %></p>
   <div class="space-y-3">
     <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
       <%= form.radio_button :location_source, "automatic", class: "border-stone-300 dark:border-stone-700 text-amber-700" %>
-      Automatic &mdash; average location from your photos' GPS data
+      <%= t("trip_entries.location_field.automatic") %>
     </label>
     <div data-radio-toggle-target="panel" data-radio-toggle-value="automatic" class="hidden mb-2">
       <% if mean_lat %>
@@ -15,16 +15,16 @@
              data-location-preview-lat-value="<%= mean_lat %>" data-location-preview-lng-value="<%= mean_lng %>">
           <div data-location-preview-target="map" class="h-40 w-full rounded-md border border-stone-300 dark:border-stone-700 z-0"></div>
         </div>
-        <p class="text-xs text-stone-400 mt-1">Averaged from <%= pluralize(located_photos.size, "photo") %> with location data.</p>
+        <p class="text-xs text-stone-400 mt-1"><%= t("trip_entries.location_field.averaged_prefix") %> <%= t("counts.photo", count: located_photos.size) %> <%= t("trip_entries.location_field.averaged_suffix") %></p>
       <% else %>
-        <p class="text-xs text-stone-400">No location data found in your photos yet.</p>
+        <p class="text-xs text-stone-400"><%= t("trip_entries.location_field.none_found") %></p>
       <% end %>
     </div>
 
     <% if located_photos.any? %>
       <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
         <%= form.radio_button :location_source, "photo", class: "border-stone-300 dark:border-stone-700 text-amber-700" %>
-        Use one of your photos' locations
+        <%= t("trip_entries.location_field.use_photo") %>
       </label>
       <div data-radio-toggle-target="panel" data-radio-toggle-value="photo" class="hidden mb-2 space-y-2"
            data-controller="location-preview"
@@ -46,7 +46,7 @@
     <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
       <%= form.radio_button :location_source, "manual", class: "border-stone-300 dark:border-stone-700 text-amber-700",
             data: { photo_date_target: "locationManualRadio" } %>
-      Manually pick on a map
+      <%= t("trip_entries.location_field.manual_pick") %>
     </label>
     <div data-radio-toggle-target="panel" data-radio-toggle-value="manual" class="hidden space-y-2"
          data-controller="location-picker"
@@ -62,7 +62,7 @@
           </svg>
         </div>
       </div>
-      <p class="text-xs text-stone-400">Drag the map until the pin marks the right spot.</p>
+      <p class="text-xs text-stone-400"><%= t("trip_entries.location_field.manual_pick_hint") %></p>
       <div class="grid grid-cols-2 gap-3">
         <%= form.number_field :latitude, step: "any", readonly: true, data: { location_picker_target: "lat" },
               class: "rounded-md border border-stone-300 dark:border-stone-700 bg-stone-100 dark:bg-stone-800/60 px-3 py-2 text-stone-500 dark:text-stone-400" %>

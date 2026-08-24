@@ -12,7 +12,7 @@ class TripEntriesController < ApplicationController
     @editable = Current.user&.can_edit?(@trip) || false
 
     if @entry.hidden? && !@editable
-      redirect_to trip_path(@trip), alert: "This entry is hidden." and return
+      redirect_to trip_path(@trip), alert: t("trip_entries.flashes.hidden_alert") and return
     end
 
     @comments = @entry.comments.where(parent_id: nil).includes(:user, replies: :user).order(:created_at)
@@ -30,8 +30,8 @@ class TripEntriesController < ApplicationController
 
     if @entry.save
       rejected = attach_uploads(@entry)
-      notice = rejected.positive? ? nil : "Entry added."
-      alert = rejected.positive? ? "Entry added, but #{rejected} #{'file'.pluralize(rejected)} couldn't be attached - only photo and video files are supported." : nil
+      notice = rejected.positive? ? nil : t("trip_entries.flashes.entry_added")
+      alert = rejected.positive? ? t("trip_entries.flashes.entry_added_rejected", count: t("counts.file", count: rejected)) : nil
       redirect_to trip_path(@trip), notice: notice, alert: alert
     else
       render :new, status: :unprocessable_entity
@@ -44,8 +44,8 @@ class TripEntriesController < ApplicationController
   def update
     if @entry.update(entry_params)
       rejected = attach_uploads(@entry)
-      notice = rejected.positive? ? nil : "Entry updated."
-      alert = rejected.positive? ? "Entry updated, but #{rejected} #{'file'.pluralize(rejected)} couldn't be attached - only photo and video files are supported." : nil
+      notice = rejected.positive? ? nil : t("trip_entries.flashes.entry_updated")
+      alert = rejected.positive? ? t("trip_entries.flashes.entry_updated_rejected", count: t("counts.file", count: rejected)) : nil
       redirect_to trip_path(@trip), notice: notice, alert: alert
     else
       render :edit, status: :unprocessable_entity
@@ -54,7 +54,7 @@ class TripEntriesController < ApplicationController
 
   def destroy
     @entry.destroy
-    redirect_to trip_path(@trip), notice: "Entry deleted.", status: :see_other
+    redirect_to trip_path(@trip), notice: t("trip_entries.flashes.entry_deleted"), status: :see_other
   end
 
   private
@@ -68,19 +68,19 @@ class TripEntriesController < ApplicationController
 
     def require_view_access
       unless trip_accessible?(@trip)
-        redirect_to root_path, alert: "This trip is private. Enter its access code to view it."
+        redirect_to root_path, alert: t("trips.flashes.private_alert")
       end
     end
 
     def require_editor
       unless performed? || Current.user.can_edit?(@trip)
-        redirect_to trip_path(@trip), alert: "You don't have edit access to this trip."
+        redirect_to trip_path(@trip), alert: t("trip_entries.flashes.not_editor")
       end
     end
 
     def require_entry_creator
       unless performed? || Current.user.can_add_entries?(@trip)
-        redirect_to trip_path(@trip), alert: "You don't have access to add entries to this trip."
+        redirect_to trip_path(@trip), alert: t("trip_entries.flashes.not_entry_creator")
       end
     end
 

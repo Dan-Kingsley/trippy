@@ -8,7 +8,7 @@ const MOVE_THRESHOLD = 10
 // Only rendered for users who can edit the trip - see trip_entries/show.
 export default class extends Controller {
   static targets = ["dialog", "content"]
-  static values = { usersUrl: String }
+  static values = { usersUrl: String, translations: Object }
 
   show(event) {
     event.preventDefault()
@@ -16,7 +16,7 @@ export default class extends Controller {
   }
 
   load(emoji) {
-    this.contentTarget.textContent = "Loading…"
+    this.contentTarget.textContent = this.translationsValue.loading
     this.dialogTarget.showModal()
 
     fetch(`${this.usersUrlValue}?emoji=${encodeURIComponent(emoji)}`, { headers: { Accept: "text/html" } })
@@ -25,7 +25,7 @@ export default class extends Controller {
         return response.text()
       })
       .then((html) => { this.contentTarget.innerHTML = html })
-      .catch(() => { this.contentTarget.textContent = "Couldn't load who reacted. Try again." })
+      .catch(() => { this.contentTarget.textContent = this.translationsValue.load_failed })
   }
 
   close() {

@@ -27,7 +27,11 @@ export default class extends Controller {
   // the edit-entry page's "add more photos" form), never on a form that also
   // collects other required fields (e.g. a new entry's title), where
   // submitting early would be premature.
-  static values = { directUploadUrl: String, autoSubmit: Boolean }
+  // translations: strings for the client-side EXIF-preview status message
+  // and upload progress labels, passed as a JSON object from ERB (via
+  // ApplicationHelper#photo_date_translations) since this controller has no
+  // direct access to Rails' I18n.
+  static values = { directUploadUrl: String, autoSubmit: Boolean, translations: Object }
 
   connect() {
     this.onPaste = this.onPaste.bind(this)
@@ -64,11 +68,12 @@ export default class extends Controller {
 
   async preview() {
     const files = [ ...this.inputTarget.files ]
+    const t = this.translationsValue
 
     if (this.hasFileCountTarget) {
       this.fileCountTarget.textContent = files.length === 0
         ? this.defaultFileCountText
-        : `${files.length} file${files.length === 1 ? "" : "s"} selected`
+        : this.interpolate(files.length === 1 ? t.file_selected.one : t.file_selected.other, { count: files.length })
     }
 
     if (files.length === 0) {
@@ -78,7 +83,7 @@ export default class extends Controller {
 
     this.uploadFiles(files)
 
-    this.statusTarget.textContent = "Reading photo date & location…"
+    this.statusTarget.textContent = t.reading
     this.statusTarget.classList.remove("hidden")
 
     let takenAt = null
@@ -93,19 +98,20 @@ export default class extends Controller {
     const found = []
     const missing = []
     if (takenAt) {
-      found.push(`📅 ${takenAt.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`)
+      found.push(this.interpolate(t.found_date, { datetime: takenAt.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) }))
     } else {
-      missing.push("date")
+      missing.push(t.date_word)
     }
     if (location) {
-      found.push("📍 location")
+      found.push(t.found_location)
     } else {
-      missing.push("location")
+      missing.push(t.location_word)
     }
 
-    let message = found.length ? `${found.join(" and ")} — read from your photos.` : ""
+    let message = found.length ? `${found.join(` ${t.and} `)} ${t.read_from_photos}` : ""
     if (missing.length) {
-      message += `${message ? " No" : "No"} ${missing.join(" or ")} found in your photos — you can set ${missing.length > 1 ? "them" : "it"} manually below.`
+      const suffix = missing.length > 1 ? t.no_suffix.other : t.no_suffix.one
+      message += `${message ? ` ${t.no_prefix}` : t.no_prefix} ${missing.join(` ${t.or} `)} ${suffix}`
     }
     this.statusTarget.textContent = message
 
@@ -115,6 +121,13 @@ export default class extends Controller {
     if (!location && this.hasLocationManualRadioTarget && !this.locationManualRadioTarget.checked) {
       this.check(this.locationManualRadioTarget)
     }
+  }
+
+  // Fills in %{name}-style placeholders, matching Rails' I18n interpolation
+  // syntax, so translation strings can be authored the same way on both
+  // sides instead of needing a separate JS-only templating convention.
+  interpolate(template, params) {
+    return template.replace(/%\{(\w+)\}/g, (_, key) => params[key])
   }
 
   uploadFiles(files) {
@@ -152,7 +165,7 @@ export default class extends Controller {
       if (error) {
         this.uploadFailed = true
         row.bar.classList.replace("bg-amber-600", "bg-red-600")
-        row.label.textContent = `${file.name} — upload failed (${error})`
+        row.label.textContent = this.interpolate(this.translationsValue.upload_failed, { filename: file.name, error })
       } else {
         // DirectUpload only calls back without an error once the server has
         // verified the uploaded bytes' checksum, so the full file is

@@ -1,5 +1,5 @@
 <div data-controller="modal">
-  <button type="button" data-action="modal#open" aria-label="Choose language"
+  <button type="button" data-action="modal#open" aria-label="<%= t("shared.locale_modal.choose_language_aria") %>"
     class="p-1.5 sm:p-2 rounded-full text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-800 cursor-pointer">
     <%= Locale::OPTIONS.fetch(I18n.locale.to_s, Locale::OPTIONS["en"]).first %>
   </button>
@@ -8,7 +8,7 @@
     <div class="p-5">
       <div class="flex items-center justify-between mb-3">
         <h2 class="font-bold text-xl"><%= t("shared.locale_modal.choose_language") %></h2>
-        <button type="button" data-action="modal#close" aria-label="Close"
+        <button type="button" data-action="modal#close" aria-label="<%= t("shared.close") %>"
           class="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer text-xl leading-none">&times;</button>
       </div>
       <div class="space-y-2">

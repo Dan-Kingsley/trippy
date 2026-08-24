@@ -4,16 +4,16 @@
 <div data-controller="toggle">
   <% if auto_time %>
     <p class="text-xs text-stone-500 dark:text-stone-400 mb-2">
-      &#128197; Automatic date &amp; time (from photos): <strong><%= auto_time.strftime("%-d %b %Y, %-l:%M %p") %></strong>
+      <%= t("trip_entries.datetime_field.automatic_label") %> <strong><%= l(auto_time, format: :trippy_short) %></strong>
     </p>
   <% else %>
-    <p class="text-xs text-stone-400 dark:text-stone-500 mb-2">No date/time found in your photos yet.</p>
+    <p class="text-xs text-stone-400 dark:text-stone-500 mb-2"><%= t("trip_entries.datetime_field.none_found") %></p>
   <% end %>
 
   <div class="flex items-center gap-2">
     <%= form.check_box :manual_time, class: "rounded border-stone-300 dark:border-stone-700 text-amber-700",
           data: { action: "toggle#sync", photo_date_target: "timeCheckbox" } %>
-    <%= form.label :manual_time, "Manually set date & time", class: "text-sm text-stone-600 dark:text-stone-300" %>
+    <%= form.label :manual_time, t("trip_entries.datetime_field.manual_label"), class: "text-sm text-stone-600 dark:text-stone-300" %>
   </div>
   <div data-toggle-target="revealable" class="hidden mt-2" data-controller="datetime-picker">
     <%= form.hidden_field :occurred_at, data: { datetime_picker_target: "hidden" } %>
@@ -23,8 +23,8 @@
       <input type="time" data-datetime-picker-target="time" data-action="input->datetime-picker#combine"
         class="rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-2">
       <button type="button" data-action="datetime-picker#setNow"
-        class="shrink-0 rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium cursor-pointer">Now</button>
+        class="shrink-0 rounded-md px-3 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-sm font-medium cursor-pointer"><%= t("trip_entries.datetime_field.now") %></button>
     </div>
-    <p class="text-xs text-stone-400 mt-1">Used to order entries chronologically. Defaults to the upload time if no photo date is found. Only visible to you.</p>
+    <p class="text-xs text-stone-400 mt-1"><%= t("trip_entries.datetime_field.help_text") %></p>
   </div>
 </div>

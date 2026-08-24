@@ -1,20 +1,410 @@
-# See config/locales/en.yml for how this file is used, and for the note on
-# scope: only a small slice of the app is translated so far. Keep this file's
-# key tree identical to en.yml's as more strings are migrated over time -
+# See config/locales/en.yml for how this file is used and the key-tree
+# convention. Every user-facing string in the app is translated here -
 # config.i18n.fallbacks (config/application.rb) means a key missed here
-# degrades to English rather than showing blank/raising.
+# degrades to English rather than showing blank/raising, so keep this file's
+# key tree identical to en.yml's as new UI is added.
 
 de:
-  hello: "Hallo Welt"
+  authentication:
+    adventurer_required: "Du brauchst Abenteurer-Zugang dafür."
+    sign_in_required: "Melde dich an, um das zu tun."
+
   layout:
     sign_in: "Anmelden"
     sign_up: "Registrieren"
     my_trips: "Meine Reisen"
     admin: "Admin"
+    toggle_dark_mode: "Dunkelmodus umschalten"
+
   shared:
+    close: "Schließen"
+    danger_zone: "Gefahrenzone"
     locale_modal:
       choose_language: "Sprache wählen"
+      choose_language_aria: "Sprache wählen"
+    private_access_modal:
+      trigger_aria: "Privaten Reise-Code eingeben"
+      heading: "Hast du einen privaten Reise-Code?"
+      code_placeholder: "32-stelligen Code eingeben"
+      view_trip: "Reise ansehen"
+      remembered_note: "Codes, die du eingibst (oder über einen geteilten Link öffnest), werden auf diesem Gerät gespeichert."
+
+  counts:
+    entry:
+      one: "%{count} Eintrag"
+      other: "%{count} Einträge"
+    favourite:
+      one: "%{count} Favorit"
+      other: "%{count} Favoriten"
+    view:
+      one: "%{count} Aufruf"
+      other: "%{count} Aufrufe"
+    comment:
+      one: "%{count} Kommentar"
+      other: "%{count} Kommentare"
+    reaction:
+      one: "%{count} Reaktion"
+      other: "%{count} Reaktionen"
+    photo:
+      one: "%{count} Foto"
+      other: "%{count} Fotos"
+    file:
+      one: "%{count} Datei"
+      other: "%{count} Dateien"
+    trip:
+      one: "%{count} Reise"
+      other: "%{count} Reisen"
+    item:
+      one: "%{count} Eintrag"
+      other: "%{count} Einträge"
+
+  home:
+    index:
+      title: "Trippy"
+      favourites_tab: "Favoriten"
+      all_tab: "Alle"
+      no_favourites_prefix: "Du hast noch keine Reisen favorisiert. Durchstöbere"
+      all_trips_link: "alle Reisen"
+      no_favourites_suffix: "um welche zum Folgen zu finden."
+      no_trips: "Noch keine Reisen."
+
+  sessions:
+    new:
+      title: "Anmelden"
+      heading: "Anmelden"
+      submit: "Anmelden"
+      new_here: "Neu hier?"
+      create_account: "Konto erstellen"
+      to_comment: "um Reisen zu kommentieren und zu reagieren."
+      try_again_later: "Bitte versuche es später erneut."
+      invalid_credentials: "Bitte anderen Benutzernamen oder Passwort versuchen."
+
+  registrations:
+    new:
+      title: "Registrieren"
+      heading: "Konto erstellen"
+      description: "Ermöglicht dir, Kommentare und Reaktionen auf Reisen zu hinterlassen. Abenteurer-Zugang (um eigene Reisen zu erstellen) wird separat von einem Admin vergeben."
+      password_hint: "Mindestens 8 Zeichen."
+      confirm_password_label: "Passwort bestätigen"
+      submit: "Registrieren"
+      already_have_account: "Bereits ein Konto?"
+      sign_in: "Anmelden"
+    welcome_notice: "Willkommen bei Trippy, %{username}!"
+
   settings:
     edit:
       title: "Einstellungen"
       language_label: "Sprache"
+      profile_picture_label: "Profilbild"
+      change_password: "Passwort ändern"
+      change_password_hint: "(leer lassen, um dein aktuelles Passwort zu behalten)"
+      new_password_label: "Neues Passwort"
+      confirm_new_password_label: "Neues Passwort bestätigen"
+      password_hint: "Mindestens 8 Zeichen."
+      save: "Änderungen speichern"
+      import_trips: "Reisen importieren"
+      import_description: "Reisen aus einer .zip-Datei wiederherstellen, die aus Trippy exportiert wurde (diese oder eine andere Instanz)."
+      archive_label: "Trippy-Export (.zip)"
+      conflict_legend: "Falls eine importierte Reise mit einer bereits vorhandenen übereinstimmt"
+      conflict_overwrite: "Die passende Reise überschreiben"
+      conflict_overwrite_hint: "(ersetzt deren Einträge, Fotos, Kommentare und Reaktionen vollständig)"
+      conflict_duplicate: "Als neue Kopie zusätzlich importieren"
+      conflict_duplicate_hint: "(behält beide; die Kopie wird bei zukünftigen Importen nicht als \"dieselbe Reise\" erkannt)"
+      import_submit: "Importieren"
+      sign_out: "Abmelden"
+    updated_notice: "Einstellungen aktualisiert."
+
+  trips:
+    index:
+      title: "Meine Reisen"
+      heading: "Meine Reisen"
+      export_all: "Alle exportieren"
+      new_trip: "Neue Reise"
+      empty: "Du hast noch keine Reisen erstellt."
+    new:
+      title: "Neue Reise"
+      heading: "Neue Reise"
+    edit:
+      title: "%{title} bearbeiten"
+      heading: "Reise bearbeiten"
+      collaborators_heading: "Mitwirkende"
+      owner_label: "Besitzer:"
+      username_placeholder: "Benutzername des Abenteurers"
+      add_collaborator: "Hinzufügen"
+      remove: "Entfernen"
+      adventurer_note: "Nur bestehende Abenteurer-Konten können hinzugefügt werden."
+      private_access_heading: "Privater Zugang"
+      private_access_description: "Teile diesen Link, damit andere die Reise ohne Anmeldung ansehen können:"
+      delete: "Reise löschen"
+      delete_confirm: "\"%{title}\" und alle ihre Einträge, Fotos und Kommentare löschen? Das kann nicht rückgängig gemacht werden."
+    form:
+      blurb_label: "Kurzbeschreibung"
+      blurb_placeholder: "Eine kurze Beschreibung dieser Reise (maximal 300 Zeichen)"
+      public_label: "Öffentlich (für alle auf der Startseite gelistet)"
+      hidden_label: "Versteckt (erscheint nicht in Reise-Listen, aber direkte/geteilte Links funktionieren weiterhin)"
+      cover_photo_heading: "Titelbild"
+      cover_auto: "Automatisch — das Foto des letzten Eintrags"
+      cover_choose_existing: "Eines der Fotos dieser Reise auswählen"
+      cover_upload_new: "Neues Foto hochladen"
+      save: "Änderungen speichern"
+      create: "Reise erstellen"
+    card:
+      private: "Privat"
+      hidden: "Versteckt"
+    show:
+      title: "%{title}"
+      public_trip: "Öffentliche Reise"
+      private_trip: "Private Reise"
+      share: "Teilen"
+      add_entry: "Eintrag hinzufügen"
+      edit_trip: "Reise bearbeiten"
+      export: "Exportieren"
+      actions_aria: "Reise-Aktionen"
+      share_heading: "Diese Reise teilen"
+      share_public_note: "Teile diesen Link, damit jeder diese Reise ansehen kann:"
+      share_private_note: "Teile diesen Link, damit andere sie ohne Anmeldung ansehen können:"
+      copy: "Kopieren"
+      copied: "Kopiert!"
+      about_heading: "Über diese Reise"
+      entries_heading: "Einträge"
+      unlocated_prefix: "noch ohne Standort:"
+      hidden_entry_title: "Für Nicht-Mitwirkende versteckt"
+      add_to_favourites: "Zu Favoriten hinzufügen"
+      remove_from_favourites: "Aus Favoriten entfernen"
+    flashes:
+      private_alert: "Diese Reise ist privat. Gib den Zugangscode ein, um sie anzusehen."
+      created: "Reise erstellt. Füge jetzt Einträge hinzu!"
+      updated: "Reise aktualisiert."
+      deleted: "Reise gelöscht."
+      not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."
+      only_owner: "Nur der Besitzer der Reise kann das tun."
+
+  trip_entries:
+    new:
+      title: "Neuer Eintrag - %{trip_title}"
+      heading: "Neuer Eintrag"
+      description_label: "Beschreibung (Markdown wird unterstützt)"
+      written_in_label: "Geschrieben auf"
+      photos_label: "Fotos & Videos"
+      upload_button: "📷 Fotos oder Videos hochladen"
+      help_text: "Standort und Datum werden automatisch aus jedem Foto gelesen, sofern du sie unten nicht überschreibst. Du kannst auch ein Bild aus deiner Zwischenablage überall in diesem Formular einfügen."
+      submit: "Eintrag hinzufügen"
+    edit:
+      title: "Eintrag bearbeiten - %{trip_title}"
+      heading: "Eintrag bearbeiten"
+      photos_heading: "Fotos"
+      photos_hint: "(zum Umsortieren ziehen — das erste Foto wird als Vorschaubild für Eintrag/Reise verwendet)"
+      processing_failed_title: "Dieses Foto konnte nicht verarbeitet werden - versuche, es zu entfernen und erneut hochzuladen."
+      remove_photo_confirm: "Dieses Foto entfernen?"
+      add_more_label: "Weitere Fotos oder Videos hinzufügen"
+      choose_button: "📷 Fotos oder Videos auswählen"
+      upload_button: "Hochladen"
+      paste_hint: "Du kannst auch ein Bild aus deiner Zwischenablage überall in diesem Formular einfügen."
+      description_label: "Beschreibung (Markdown wird unterstützt)"
+      written_in_label: "Geschrieben auf"
+      hidden_label: "Versteckt (wird für andere nicht auf der Karte oder in der Eintragsliste angezeigt)"
+      save: "Änderungen speichern"
+      delete: "Eintrag löschen"
+      delete_confirm: "Diesen Eintrag und seine Fotos löschen?"
+    show:
+      title: "%{entry_title} - %{trip_title}"
+      back_to_trip: "%{trip_title}"
+      edit: "Eintrag bearbeiten"
+      previous_photo: "Vorheriges Foto"
+      next_photo: "Nächstes Foto"
+      go_to_photo: "Zu Foto %{number} springen"
+      restart_video: "Video neu starten"
+      add_reaction_aria: "Weitere Reaktion hinzufügen"
+      recent_tab: "Kürzlich"
+      all_tab: "Alle"
+      no_recent_reactions: "Noch keine kürzlichen Reaktionen."
+      comment_placeholder: "Kommentar hinzufügen…"
+      post: "Absenden"
+      sign_in: "Anmelden"
+      to_comment: "um zu kommentieren oder zu reagieren."
+      comments_heading: "Kommentare"
+      no_comments: "Noch keine Kommentare."
+    comment:
+      reply: "Antworten"
+      delete: "Löschen"
+      reply_placeholder: "Antworten…"
+      delete_confirm: "Diesen Kommentar löschen?"
+    datetime_field:
+      automatic_label: "📅 Automatisches Datum & Uhrzeit (aus Fotos):"
+      none_found: "Noch kein Datum/Uhrzeit in deinen Fotos gefunden."
+      manual_label: "Datum & Uhrzeit manuell festlegen"
+      now: "Jetzt"
+      help_text: "Wird verwendet, um Einträge chronologisch zu ordnen. Standardmäßig die Uploadzeit, falls kein Fotodatum gefunden wird. Nur für dich sichtbar."
+    location_field:
+      label: "Standort"
+      automatic: "Automatisch — durchschnittlicher Standort aus den GPS-Daten deiner Fotos"
+      averaged_prefix: "Gemittelt aus"
+      averaged_suffix: "mit Standortdaten."
+      none_found: "Noch keine Standortdaten in deinen Fotos gefunden."
+      use_photo: "Standort eines deiner Fotos verwenden"
+      manual_pick: "Manuell auf einer Karte auswählen"
+      manual_pick_hint: "Ziehe die Karte, bis die Nadel die richtige Stelle markiert."
+    who_else_field:
+      heading: "Wer war noch dabei?"
+    flashes:
+      hidden_alert: "Dieser Eintrag ist versteckt."
+      entry_added: "Eintrag hinzugefügt."
+      entry_added_rejected: "Eintrag hinzugefügt, aber %{count} konnten nicht angehängt werden - nur Foto- und Videodateien werden unterstützt."
+      entry_updated: "Eintrag aktualisiert."
+      entry_updated_rejected: "Eintrag aktualisiert, aber %{count} konnten nicht angehängt werden - nur Foto- und Videodateien werden unterstützt."
+      entry_deleted: "Eintrag gelöscht."
+      not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."
+      not_entry_creator: "Du hast keinen Zugriff, um Einträge zu dieser Reise hinzuzufügen."
+
+  reactions:
+    reactor_list:
+      heading: "%{emoji}-Reaktionen"
+      empty: "Niemand hat mit diesem Emoji reagiert."
+    flashes:
+      private_alert: "Diese Reise ist privat."
+
+  admin:
+    users:
+      index:
+        title: "Admin - Benutzer"
+        heading: "Benutzer"
+        grant_label: "Abenteurer-Zugang per Benutzername gewähren"
+        username_placeholder: "Benutzername"
+        grant: "Gewähren"
+        username_column: "Benutzername"
+        joined_column: "Beigetreten"
+        adventurer_column: "Abenteurer"
+        admin_column: "Admin"
+        revoke: "Entziehen"
+        you: "du"
+      updated: "%{username} aktualisiert."
+      granted_adventurer: "%{username} ist jetzt ein Abenteurer."
+      user_not_found: "Kein Benutzer mit diesem Benutzernamen gefunden."
+      not_authorized: "Nicht autorisiert."
+
+  trip_collaborators:
+    not_found: "Kein Abenteurer mit diesem Benutzernamen gefunden."
+    added: "%{username} kann diese Reise jetzt bearbeiten."
+    removed: "Mitwirkender entfernt."
+    only_owner: "Nur der Besitzer der Reise kann Mitwirkende verwalten."
+
+  private_accesses:
+    try_again_later: "Bitte versuche es später erneut."
+    invalid_code: "Dieser Code entspricht keiner privaten Reise."
+
+  comments:
+    private_alert: "Diese Reise ist privat."
+    removed: "Kommentar entfernt."
+    not_authorized: "Du kannst diesen Kommentar nicht entfernen."
+
+  favorites:
+    private_alert: "Diese Reise ist privat."
+
+  imports:
+    choose_file: "Wähle eine .zip-Datei zum Importieren."
+    too_large: "Diese Datei ist zu groß zum Importieren."
+    failed: "Import fehlgeschlagen: %{error}"
+    imported: "%{count} importiert"
+    overwrote: "%{count} überschrieben"
+    failed_count: "%{count} konnten nicht importiert werden"
+    nothing_imported: "Es wurde nichts importiert."
+    warnings: "%{count} übersprungen (nicht auflösbare Benutzer oder ungültige Dateien)."
+
+  exports:
+    not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."
+
+  photos:
+    rejected: "%{count} konnten nicht hinzugefügt werden - nur Foto- und Videodateien werden unterstützt."
+    added: "Fotos hinzugefügt."
+    removed: "Foto entfernt."
+    not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."
+
+  javascript:
+    photo_date:
+      reading: "Fotodatum & Standort werden gelesen…"
+      found_date: "📅 %{datetime}"
+      found_location: "📍 Standort"
+      and: "und"
+      or: "oder"
+      read_from_photos: "— aus deinen Fotos gelesen."
+      no_prefix: "Kein(e)"
+      no_suffix:
+        one: "in deinen Fotos gefunden — du kannst es unten manuell festlegen."
+        other: "in deinen Fotos gefunden — du kannst sie unten manuell festlegen."
+      date_word: "Datum"
+      location_word: "Standort"
+      upload_failed: "%{filename} — Upload fehlgeschlagen (%{error})"
+      file_selected:
+        one: "%{count} Datei ausgewählt"
+        other: "%{count} Dateien ausgewählt"
+    reaction_users:
+      loading: "Lädt…"
+      load_failed: "Konnte nicht laden, wer reagiert hat. Bitte erneut versuchen."
+
+  date:
+    abbr_month_names: [~, Jan, Feb, Mär, Apr, Mai, Jun, Jul, Aug, Sep, Okt, Nov, Dez]
+    month_names: [~, Januar, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember]
+    formats:
+      trippy_short: "%-d. %b %Y"
+      trippy_day_month: "%-d. %b"
+  time:
+    formats:
+      trippy_short: "%-d. %b %Y, %-H:%M Uhr"
+
+  activerecord:
+    attributes:
+      user:
+        username: "Benutzername"
+        password: "Passwort"
+        password_confirmation: "Passwortbestätigung"
+        profile_picture: "Profilbild"
+      trip:
+        title: "Titel"
+        description: "Beschreibung"
+        cover_photo: "Titelbild"
+      trip_entry:
+        title: "Titel"
+        description: "Beschreibung"
+      comment:
+        body: "Text"
+        parent: "Übergeordneter Kommentar"
+      reaction:
+        emoji: "Emoji"
+      photo:
+        image: "Bild"
+    errors:
+      models:
+        user:
+          attributes:
+            username:
+              invalid_format: "darf nur Buchstaben, Zahlen, Punkte, Bindestriche und Unterstriche enthalten"
+            profile_picture:
+              invalid_content_type: "muss ein unterstütztes Fotoformat sein"
+        trip:
+          attributes:
+            cover_photo:
+              invalid_content_type: "muss ein unterstütztes Fotoformat sein"
+        photo:
+          attributes:
+            image:
+              invalid_content_type: "muss ein unterstütztes Foto- oder Videoformat sein"
+        reaction:
+          attributes:
+            emoji:
+              invalid: "muss ein einzelnes Emoji sein"
+        comment:
+          attributes:
+            parent:
+              wrong_entry: "muss zum selben Eintrag gehören"
+              nested_reply: "kann nicht selbst eine Antwort sein"
+
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: "muss ausgefüllt werden"
+      taken: "ist bereits vergeben"
+      too_short: "ist zu kurz (mindestens %{count} Zeichen)"
+      too_long: "ist zu lang (maximal %{count} Zeichen)"
+      confirmation: "stimmt nicht mit %{attribute} überein"
+      inclusion: "ist kein gültiger Wert"
+      invalid: "ist ungültig"

@@ -2,9 +2,9 @@
 
 <% if Current.user %>
   <div class="flex gap-1 mb-6 border-b border-stone-200 dark:border-stone-800">
-    <%= link_to "Favourites", root_path(tab: "favourites"),
+    <%= link_to t("home.index.favourites_tab"), root_path(tab: "favourites"),
           class: "px-4 py-2 text-sm font-medium border-b-2 -mb-px #{@tab == "favourites" ? "border-amber-700 text-amber-700 dark:text-amber-400" : "border-transparent text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"}" %>
-    <%= link_to "All", root_path(tab: "all"),
+    <%= link_to t("home.index.all_tab"), root_path(tab: "all"),
           class: "px-4 py-2 text-sm font-medium border-b-2 -mb-px #{@tab == "all" ? "border-amber-700 text-amber-700 dark:text-amber-400" : "border-transparent text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"}" %>
   </div>
 <% end %>
@@ -18,9 +18,9 @@
     </div>
   <% elsif @tab == "favourites" %>
     <p class="text-stone-500 dark:text-stone-400">
-      You haven't favourited any trips yet. Browse <%= link_to "all trips", root_path(tab: "all"), class: "text-amber-700 dark:text-amber-400 underline" %> to find ones to follow.
+      <%= t("home.index.no_favourites_prefix") %> <%= link_to t("home.index.all_trips_link"), root_path(tab: "all"), class: "text-amber-700 dark:text-amber-400 underline" %> <%= t("home.index.no_favourites_suffix") %>
     </p>
   <% else %>
-    <p class="text-stone-500 dark:text-stone-400">No trips yet.</p>
+    <p class="text-stone-500 dark:text-stone-400"><%= t("home.index.no_trips") %></p>
   <% end %>
 </section>
