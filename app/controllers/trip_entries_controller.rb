@@ -17,6 +17,7 @@ class TripEntriesController < ApplicationController
 
     @comments = @entry.comments.where(parent_id: nil).includes(:user, replies: :user).order(:created_at)
     @trip_member = Current.user && @trip.editors.exists?(id: Current.user.id)
+    set_adjacent_entries
     record_view!
   end
 
@@ -64,6 +65,18 @@ class TripEntriesController < ApplicationController
 
     def set_entry
       @entry = @trip.trip_entries.find(params[:id])
+    end
+
+    # Mirrors the newest-first ordering of the trip's entry list
+    # (see trips/show.html.erb), so the header's back/forward arrows
+    # step through entries in the same order the list shows them.
+    def set_adjacent_entries
+      visible = @editable ? @trip.trip_entries : @trip.trip_entries.where(hidden: false)
+      ordered = visible.to_a.reverse
+      index = ordered.index(@entry)
+
+      @previous_entry = index && ordered[index - 1] if index&.positive?
+      @next_entry = index && index < ordered.length - 1 ? ordered[index + 1] : nil
     end
 
     def require_view_access
