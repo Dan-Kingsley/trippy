@@ -1,12 +1,13 @@
 class PhotoVariantJob < ApplicationJob
   queue_as :default
 
-  # A truncated/corrupt decode (fail_on: :truncated on the variant's loader,
-  # set on Photo#image) raises Vips::Error rather than returning a bad image - retry
-  # a couple of times in case it's transient container memory pressure before
-  # giving up and flagging the photo as failed. The give-up block is passed
-  # directly to retry_on (rather than a separate discard_on for the same
-  # exception, which would ambiguously double-register a handler for it).
+  # Even fail_on: :none (see Photo#image) still raises Vips::Error for a file
+  # libvips can't make any sense of at all (not just a decode warning/error
+  # on an otherwise-recognized structure) - retry a couple of times in case
+  # it's transient container memory pressure before giving up and flagging
+  # the photo as failed. The give-up block is passed directly to retry_on
+  # (rather than a separate discard_on for the same exception, which would
+  # ambiguously double-register a handler for it).
   retry_on Vips::Error, wait: :polynomially_longer, attempts: 3 do |job, error|
     photo_id = job.arguments.first
     Photo.find_by(id: photo_id)&.update_columns(processing_failed_at: Time.current, processing_error: PhotoVariantJob.sanitize_error_message(error.message))

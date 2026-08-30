@@ -5,7 +5,10 @@ class User < ApplicationRecord
     # every display size the app renders avatars at - keeps the number of
     # variants that can fail to process down to one per user, rather than
     # one per distinct `size:` an avatar_tag call site happens to pass.
-    attachable.variant :thumb, resize_to_fill: [ 128, 128 ], saver: { quality: 80 }, loader: { fail_on: :error }
+    # fail_on: :none - see Photo#image for why (Pixel Ultra HDR photos raise
+    # a libvips-classified "truncated" decode condition that isn't actually
+    # corruption).
+    attachable.variant :thumb, resize_to_fill: [ 128, 128 ], saver: { quality: 80 }, loader: { fail_on: :none }
   end
   has_many :sessions, dependent: :destroy
 

@@ -7,16 +7,24 @@ class Photo < ApplicationRecord
     # kept small so pages stay snappy. Only the lightbox loads :full.
     # These only apply to image content; videos are previewed instead (see
     # PhotoVariantJob).
-    # fail_on: :truncated makes a genuinely incomplete/corrupt decode raise
-    # instead of silently returning a gray-filled image - see PhotoVariantJob
-    # for how that's turned into a retry + failure flag. Deliberately not the
-    # stricter :error: some phone cameras (e.g. Pixel's Ultra HDR JPEGs, which
-    # append a second gain-map image via a Multi-Picture Format trailer) emit
-    # a recoverable decode error on that trailing data even though the actual
-    # photo pixels decoded fine - :error treated that the same as real
-    # corruption, flagging every one of those photos as failed to process.
-    attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }, loader: { fail_on: :truncated }
-    attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }, loader: { fail_on: :truncated }
+    # fail_on: :none - deliberately the most permissive libvips level. Pixel's
+    # Ultra HDR JPEGs (a second gain-map image appended after the primary
+    # one) reliably decode with a "VipsJpeg: premature end of JPEG image"
+    # condition that libvips classifies as *truncated*, not merely :error -
+    # so :truncated (tried first) still rejected every one of these photos as
+    # if they were corrupt uploads, identically to :error. There's no tier
+    # between "reject this" and "never reject on a decode warning/error" that
+    # would let this specific, real, camera-produced structure through while
+    # still catching truncation - and a *dropped/incomplete upload transfer*
+    # (the original motivation for failing loudly here) can no longer reach
+    # this code with fewer bytes than the adventurer actually sent: direct
+    # upload verifies a checksum against the whole file server-side before
+    # the blob is ever usable (see photo_date_controller.js), independent of
+    # this loader setting. What :none still can't paper over is a file that
+    # was *always* malformed (e.g. someone's already-corrupt photo) -
+    # PhotoVariantJob's rescue/retry/flag path remains the backstop for that.
+    attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }, loader: { fail_on: :none }
+    attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }, loader: { fail_on: :none }
   end
 
   validate :acceptable_content_type
