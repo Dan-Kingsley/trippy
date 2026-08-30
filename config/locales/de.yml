@@ -341,6 +341,7 @@ de:
         generic: "bitte erneut versuchen"
       copy_error: "Fehlerdetails kopieren"
       error_copied: "Kopiert!"
+      retry_upload: "Upload wiederholen"
       file_selected:
         one: "%{count} Datei ausgewählt"
         other: "%{count} Dateien ausgewählt"

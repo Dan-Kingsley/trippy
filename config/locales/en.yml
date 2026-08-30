@@ -369,6 +369,7 @@ en:
         generic: "please try again"
       copy_error: "Copy error details"
       error_copied: "Copied!"
+      retry_upload: "Retry upload"
       file_selected:
         one: "%{count} file selected"
         other: "%{count} files selected"

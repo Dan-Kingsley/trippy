@@ -1,8 +1,8 @@
 class PhotoVariantJob < ApplicationJob
   queue_as :default
 
-  # A partial/corrupt decode (fail_on: :error on the variant's loader, set on
-  # Photo#image) raises Vips::Error rather than returning a bad image - retry
+  # A truncated/corrupt decode (fail_on: :truncated on the variant's loader,
+  # set on Photo#image) raises Vips::Error rather than returning a bad image - retry
   # a couple of times in case it's transient container memory pressure before
   # giving up and flagging the photo as failed. The give-up block is passed
   # directly to retry_on (rather than a separate discard_on for the same

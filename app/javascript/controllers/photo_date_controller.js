@@ -38,7 +38,10 @@ export default class extends Controller {
     this.element.addEventListener("paste", this.onPaste)
     this.defaultFileCountText = this.hasFileCountTarget ? this.fileCountTarget.textContent : null
     this.pendingUploads = 0
-    this.uploadFailed = false
+    // Rows currently showing a failure, rather than one sticky boolean - a
+    // retried row that goes on to succeed needs to stop blocking autoSubmit
+    // even though *some* upload in this batch failed at some point.
+    this.failedRows = new Set()
   }
 
   disconnect() {
@@ -136,7 +139,7 @@ export default class extends Controller {
     this.uploadListTarget.innerHTML = ""
     this.uploadListTarget.classList.remove("hidden")
     this.pendingUploads += files.length
-    this.uploadFailed = false
+    this.failedRows = new Set()
     this.setSubmitDisabled(true)
 
     files.forEach((file) => this.uploadFile(file))
@@ -151,7 +154,15 @@ export default class extends Controller {
   uploadFile(file) {
     const row = this.buildProgressRow(file.name)
     this.uploadListTarget.appendChild(row.element)
+    this.attemptUpload(file, row)
+  }
 
+  // Re-attempts a single file into its existing row rather than building a
+  // new one, so a batch where some files fail and some succeed doesn't
+  // reshuffle or duplicate the list when the adventurer retries just the
+  // failures - only pulled out of uploadFile so retryUpload can drive the
+  // same DirectUpload flow into an already-failed row.
+  attemptUpload(file, row) {
     const upload = new DirectUpload(file, this.directUploadUrlValue, {
       directUploadWillStoreFileWithXHR: (xhr) => {
         xhr.upload.addEventListener("progress", (event) => {
@@ -163,19 +174,25 @@ export default class extends Controller {
 
     upload.create((error, blob) => {
       if (error) {
-        this.uploadFailed = true
+        this.failedRows.add(row)
         row.bar.classList.replace("bg-amber-600", "bg-red-600")
         row.label.textContent = this.interpolate(this.translationsValue.upload_failed, { filename: file.name, reason: this.uploadFailureReason(error) })
         row.label.title = error
         row.copy.classList.remove("hidden")
-        row.copy.addEventListener("click", () => this.copyErrorDetails(row.copy, file, error))
+        row.retry.classList.remove("hidden")
+        row.copy.onclick = () => this.copyErrorDetails(row.copy, file, error)
+        row.retry.onclick = () => this.retryUpload(file, row)
       } else {
         // DirectUpload only calls back without an error once the server has
         // verified the uploaded bytes' checksum, so the full file is
         // confirmed intact by this point - safe to show the success tick.
+        this.failedRows.delete(row)
         row.bar.style.width = "100%"
-        row.bar.classList.replace("bg-amber-600", "bg-green-600")
+        row.bar.classList.remove("bg-amber-600", "bg-red-600")
+        row.bar.classList.add("bg-green-600")
         row.check.classList.remove("hidden")
+        row.copy.classList.add("hidden")
+        row.retry.classList.add("hidden")
         const hidden = document.createElement("input")
         hidden.type = "hidden"
         hidden.name = "photo_signed_ids[]"
@@ -186,9 +203,23 @@ export default class extends Controller {
       this.pendingUploads = Math.max(0, this.pendingUploads - 1)
       if (this.pendingUploads === 0) {
         this.setSubmitDisabled(false)
-        if (this.autoSubmitValue && !this.uploadFailed) this.element.requestSubmit()
+        if (this.autoSubmitValue && this.failedRows.size === 0) this.element.requestSubmit()
       }
     })
+  }
+
+  retryUpload(file, row) {
+    this.pendingUploads += 1
+    this.setSubmitDisabled(true)
+    row.bar.style.width = "0%"
+    row.bar.classList.remove("bg-red-600", "bg-green-600")
+    row.bar.classList.add("bg-amber-600")
+    row.label.textContent = file.name
+    row.label.removeAttribute("title")
+    row.check.classList.add("hidden")
+    row.copy.classList.add("hidden")
+    row.retry.classList.add("hidden")
+    this.attemptUpload(file, row)
   }
 
   buildProgressRow(name) {
@@ -225,7 +256,17 @@ export default class extends Controller {
     copy.title = this.translationsValue.copy_error
     element.appendChild(copy)
 
-    return { element, label, bar, check, copy }
+    // Also only shown on failure - retries just this one file (e.g. after a
+    // dropped connection) without having to reselect every photo in the
+    // batch, several of which may have already uploaded fine.
+    const retry = document.createElement("button")
+    retry.type = "button"
+    retry.className = "hidden shrink-0 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+    retry.textContent = "↻"
+    retry.title = this.translationsValue.retry_upload
+    element.appendChild(retry)
+
+    return { element, label, bar, check, copy, retry }
   }
 
   // Maps the technical error DirectUpload reports (always English, e.g.
