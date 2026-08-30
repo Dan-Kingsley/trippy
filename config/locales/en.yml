@@ -363,7 +363,12 @@ en:
         other: "found in your photos — you can set them manually below."
       date_word: "date"
       location_word: "location"
-      upload_failed: "%{filename} — upload failed (%{error})"
+      upload_failed: "%{filename} — upload failed (%{reason})"
+      upload_failed_reason:
+        network: "connection interrupted — this can happen with large files on a slow connection, try again"
+        generic: "please try again"
+      copy_error: "Copy error details"
+      error_copied: "Copied!"
       file_selected:
         one: "%{count} file selected"
         other: "%{count} files selected"

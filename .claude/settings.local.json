@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Read(//tmp/**)",
-      "Bash(curl -s -c cookies.txt -b cookies.txt http://localhost:3000/ -o home_logged.html)"
+      "Bash(curl -s -c cookies.txt -b cookies.txt http://localhost:3000/ -o home_logged.html)",
+      "Bash(bundle show *)",
+      "Bash(find / -xdev -iname \"data.rb\" -path \"*exif*\")",
+      "Bash(find / -xdev -type d -iname \"exif-*\")",
+      "Bash(ruby -v)",
+      "Bash(find / -xdev -iname \"*.gemspec\" -path \"*exif*\")",
+      "Bash(find / -xdev -type d -name \"bundle\")",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

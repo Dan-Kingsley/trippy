@@ -335,7 +335,12 @@ de:
         other: "in deinen Fotos gefunden — du kannst sie unten manuell festlegen."
       date_word: "Datum"
       location_word: "Standort"
-      upload_failed: "%{filename} — Upload fehlgeschlagen (%{error})"
+      upload_failed: "%{filename} — Upload fehlgeschlagen (%{reason})"
+      upload_failed_reason:
+        network: "Verbindung unterbrochen — das kann bei großen Dateien mit langsamer Verbindung passieren, bitte erneut versuchen"
+        generic: "bitte erneut versuchen"
+      copy_error: "Fehlerdetails kopieren"
+      error_copied: "Kopiert!"
       file_selected:
         one: "%{count} Datei ausgewählt"
         other: "%{count} Dateien ausgewählt"

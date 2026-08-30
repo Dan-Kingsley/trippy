@@ -31,9 +31,16 @@ class ExifExtractionJob < ApplicationJob
       data = Exif::Data.new(file)
       found = false
 
-      if (lat = decimal_degrees(data.gps_latitude, data.gps_latitude_ref))
+      lat = decimal_degrees(data.gps_latitude, data.gps_latitude_ref)
+      lng = decimal_degrees(data.gps_longitude, data.gps_longitude_ref)
+      # A (0, 0) pair - "null island" - is never a real photo location; it's
+      # what a malformed or partially-garbled GPS IFD decodes to (e.g. a
+      # zero-denominator rational). Treat it the same as no GPS data found,
+      # so the vips/libexif fallback below gets a chance instead of a bogus
+      # pin landing on the map.
+      if lat && lng && [ lat, lng ] != [ 0.0, 0.0 ]
         photo.latitude = lat
-        photo.longitude = decimal_degrees(data.gps_longitude, data.gps_longitude_ref)
+        photo.longitude = lng
         found = true
       end
 
@@ -43,8 +50,15 @@ class ExifExtractionJob < ApplicationJob
 
       Rails.logger.info("ExifExtractionJob: exif gem #{found ? "found" : "found no"} GPS data for photo #{photo.id}")
       found
-    rescue Exif::NotReadable, Exif::Error, ArgumentError => e
-      Rails.logger.info("ExifExtractionJob: exif gem failed for photo #{photo.id}: #{e.message}")
+    rescue StandardError => e
+      # Deliberately broad: camera-specific EXIF quirks (nonstandard tag
+      # types, unexpected MakerNote structure, etc.) can raise things this
+      # gem doesn't declare (e.g. NoMethodError, TypeError), not just its own
+      # Exif::NotReadable/Exif::Error. Any of those should fall through to
+      # the more tolerant vips fallback rather than failing the whole job -
+      # see the retry_on above, which would otherwise treat this the same as
+      # a transient infra error and retry twice before giving up entirely.
+      Rails.logger.info("ExifExtractionJob: exif gem failed for photo #{photo.id}: #{e.class}: #{e.message}")
       false
     end
 
@@ -65,7 +79,7 @@ class ExifExtractionJob < ApplicationJob
       lat = vips_gps_decimal(image, lat_field, lat_ref_field)
       lng = vips_gps_decimal(image, lng_field, lng_ref_field)
 
-      if lat && lng
+      if lat && lng && [ lat, lng ] != [ 0.0, 0.0 ]
         photo.latitude = lat
         photo.longitude = lng
         Rails.logger.info("ExifExtractionJob: vips fallback found GPS data for photo #{photo.id}")

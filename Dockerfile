@@ -27,7 +27,16 @@ ENV RAILS_ENV="production" \
     BUNDLE_WITHOUT="development" \
     LD_PRELOAD="/usr/local/lib/libjemalloc.so" \
     VIPS_CONCURRENCY="2" \
-    VIPS_DISC_THRESHOLD="50mb"
+    VIPS_DISC_THRESHOLD="50mb" \
+    HTTP_READ_TIMEOUT="300"
+
+# Thruster's default HTTP_READ_TIMEOUT (30s) is the max time a client gets to
+# send a whole request body. Direct-to-disk photo/video uploads (see
+# photo_date_controller.js) stream straight through Thruster to Puma, and
+# large camera files (e.g. a phone's 30-50MB Ultra HDR/motion-photo JPEGs) on
+# a slow or patchy mobile connection can easily take longer than that,
+# so Thruster kills the connection mid-upload - the browser sees that as a
+# network error with no HTTP status (status 0), not a clean failure response.
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build

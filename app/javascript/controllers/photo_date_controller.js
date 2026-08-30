@@ -165,7 +165,10 @@ export default class extends Controller {
       if (error) {
         this.uploadFailed = true
         row.bar.classList.replace("bg-amber-600", "bg-red-600")
-        row.label.textContent = this.interpolate(this.translationsValue.upload_failed, { filename: file.name, error })
+        row.label.textContent = this.interpolate(this.translationsValue.upload_failed, { filename: file.name, reason: this.uploadFailureReason(error) })
+        row.label.title = error
+        row.copy.classList.remove("hidden")
+        row.copy.addEventListener("click", () => this.copyErrorDetails(row.copy, file, error))
       } else {
         // DirectUpload only calls back without an error once the server has
         // verified the uploaded bytes' checksum, so the full file is
@@ -210,7 +213,55 @@ export default class extends Controller {
     check.textContent = "✓"
     element.appendChild(check)
 
-    return { element, label, bar, check }
+    // Only shown on failure - lets an adventurer copy the technical detail
+    // (filename/size/type/status/timestamp, nothing account- or
+    // server-specific) to paste into a support message, since the friendly
+    // label text alone often isn't enough for us to diagnose a one-off
+    // failure like a specific phone's oversized photos timing out.
+    const copy = document.createElement("button")
+    copy.type = "button"
+    copy.className = "hidden shrink-0 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+    copy.textContent = "📋"
+    copy.title = this.translationsValue.copy_error
+    element.appendChild(copy)
+
+    return { element, label, bar, check, copy }
+  }
+
+  // Maps the technical error DirectUpload reports (always English, e.g.
+  // `Error storing "x.jpg". Status: 0`) to a short user-facing reason. The
+  // full technical string is never discarded - it's still on the row's
+  // title attribute and in the copy-to-clipboard details - this is just a
+  // friendlier headline for the common cases.
+  uploadFailureReason(error) {
+    const t = this.translationsValue.upload_failed_reason
+    const status = Number(error.match(/Status: (\d+)/)?.[1])
+    return status === 0 ? t.network : t.generic
+  }
+
+  async copyErrorDetails(button, file, error) {
+    const details = [
+      `File: ${file.name}`,
+      `Size: ${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+      `Type: ${file.type || "unknown"}`,
+      `Error: ${error}`,
+      `Time: ${new Date().toISOString()}`,
+      `Browser: ${navigator.userAgent}`
+    ].join("\n")
+
+    try {
+      await navigator.clipboard.writeText(details)
+      const original = button.textContent
+      button.textContent = "✓"
+      button.title = this.translationsValue.error_copied
+      setTimeout(() => {
+        button.textContent = original
+        button.title = this.translationsValue.copy_error
+      }, 1500)
+    } catch {
+      // Clipboard API unavailable (e.g. insecure context) - the technical
+      // detail is still visible via the row's title attribute.
+    }
   }
 
   setSubmitDisabled(disabled) {
@@ -276,7 +327,15 @@ export default class extends Controller {
     const latRef = gpsIfd.get(0x0001)
     const lng = gpsIfd.get(0x0004)
     const lngRef = gpsIfd.get(0x0003)
-    if (!lat || !lng) return null
+    // `lat`/`lng` are 3-element [deg, min, sec] arrays when the tag parsed at
+    // all, even if every component came out as 0 (e.g. a malformed rational
+    // with a zero denominator, which readIfd maps to 0 rather than dropping
+    // the tag) - checking truthiness alone treats that array as "found",
+    // showing a location marker for what's actually the null-island (0,0)
+    // non-value. Requiring at least one non-zero component avoids
+    // misreporting "found location" for photos this preview can't actually
+    // place on the map.
+    if (!lat || !lng || (lat.every((v) => v === 0) && lng.every((v) => v === 0))) return null
 
     const toDecimal = ([ deg, min, sec ], ref) => {
       const value = deg + min / 60 + sec / 3600
