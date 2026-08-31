@@ -7,22 +7,24 @@ class Photo < ApplicationRecord
     # kept small so pages stay snappy. Only the lightbox loads :full.
     # These only apply to image content; videos are previewed instead (see
     # PhotoVariantJob).
-    # fail_on: :none - deliberately the most permissive libvips level. Pixel's
-    # Ultra HDR JPEGs (a second gain-map image appended after the primary
-    # one) reliably decode with a "VipsJpeg: premature end of JPEG image"
-    # condition that libvips classifies as *truncated*, not merely :error -
-    # so :truncated (tried first) still rejected every one of these photos as
-    # if they were corrupt uploads, identically to :error. There's no tier
-    # between "reject this" and "never reject on a decode warning/error" that
-    # would let this specific, real, camera-produced structure through while
-    # still catching truncation - and a *dropped/incomplete upload transfer*
-    # (the original motivation for failing loudly here) can no longer reach
-    # this code with fewer bytes than the adventurer actually sent: direct
+    # fail_on: :none - deliberately the most permissive libvips level. Some
+    # Pixel photos' entropy-coded scan data runs out before every scanline
+    # the file's own header promises has been decoded, which libjpeg reports
+    # as "premature end of JPEG image" - libvips classifies that as
+    # *truncated*, not merely :error, so :truncated (tried first) still
+    # rejected these exactly like :error did. Under :none this no longer
+    # raises - it decodes what it can and leaves the remaining rows
+    # undrawn, which is *also* not fully right (see
+    # PhotoVariantJob#check_for_incomplete_decode for how a resulting
+    # partial image gets flagged rather than passed off as a clean one). A
+    # *dropped/incomplete upload transfer*, the original motivation for
+    # failing loudly here, can no longer reach this code with fewer bytes
+    # than the adventurer actually sent regardless of this setting: direct
     # upload verifies a checksum against the whole file server-side before
-    # the blob is ever usable (see photo_date_controller.js), independent of
-    # this loader setting. What :none still can't paper over is a file that
-    # was *always* malformed (e.g. someone's already-corrupt photo) -
-    # PhotoVariantJob's rescue/retry/flag path remains the backstop for that.
+    # the blob is ever usable (see photo_date_controller.js). What :none
+    # still can't paper over is a file libvips can't make any sense of at
+    # all - PhotoVariantJob's rescue/retry/flag path remains the backstop
+    # for that.
     attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }, loader: { fail_on: :none }
     attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }, loader: { fail_on: :none }
   end
@@ -39,6 +41,13 @@ class Photo < ApplicationRecord
 
   def processing_failed?
     processing_failed_at.present?
+  end
+
+  # True when a thumb/full variant exists but was decoded from a source
+  # image libvips only got partway through (see Photo#image's fail_on:
+  # :none) - the photo is visible, just potentially missing its bottom rows.
+  def processing_incomplete?
+    processing_incomplete_at.present?
   end
 
   private

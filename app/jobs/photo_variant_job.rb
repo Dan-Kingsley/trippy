@@ -25,6 +25,7 @@ class PhotoVariantJob < ApplicationJob
     else
       photo.image.variant(:thumb).processed
       photo.image.variant(:full).processed
+      check_for_incomplete_decode(photo)
     end
   rescue ActiveStorage::InvariableError, ActiveStorage::UnpreviewableError, ActiveStorage::UnrepresentableError => e
     # A corrupt/truncated upload or an unsupported codec can't be turned into
@@ -34,6 +35,25 @@ class PhotoVariantJob < ApplicationJob
     photo.update_columns(processing_failed_at: Time.current, processing_error: PhotoVariantJob.sanitize_error_message(e.message))
     Rails.logger.warn("PhotoVariantJob: could not process photo #{photo_id}: #{e.message}")
   end
+
+  private
+    # fail_on: :none (see Photo#image) means the variants above can succeed
+    # having only decoded *part* of the source image, silently - libvips
+    # doesn't expose "I stopped early" as a flag on the image it hands back,
+    # so the only reliable way to tell a fully-decoded photo from a
+    # partially-decoded one is to redo the decode at the strictest fail_on
+    # level and see whether *that* raises. This throwaway re-decode exists
+    # purely to surface that error; its pixels are never used, and its cost
+    # (one extra full decode pass) only applies to photos that already made
+    # it past the real rescue above.
+    def check_for_incomplete_decode(photo)
+      photo.image.blob.open do |file|
+        Vips::Image.new_from_file(file.path, fail_on: :error, access: :sequential).avg
+      end
+    rescue Vips::Error => e
+      photo.update_columns(processing_incomplete_at: Time.current, processing_error: PhotoVariantJob.sanitize_error_message(e.message))
+      Rails.logger.warn("PhotoVariantJob: photo #{photo.id} only partially decoded: #{e.message}")
+    end
 
   # Strips absolute filesystem paths (the tmp path ActiveStorage extracted the
   # blob to, e.g. in a libvips "unable to load from file ..." message) before
