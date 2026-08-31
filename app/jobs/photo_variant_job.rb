@@ -1,6 +1,15 @@
 class PhotoVariantJob < ApplicationJob
   queue_as :default
 
+  # Comfortably above real camera sensors we expect to see (Pixel 9 Pro's
+  # main sensor is ~50MP) while still bounding the memory a single decode
+  # can demand now that Photo#image's `unlimited: true` has removed
+  # libvips' own (apparently miscalibrated-for-real-photos) guard against
+  # decompression-bomb JPEGs - see reject_if_oversized.
+  MAX_MEGAPIXELS = 120
+
+  class ImageTooLargeError < StandardError; end
+
   # Even fail_on: :none (see Photo#image) still raises Vips::Error for a file
   # libvips can't make any sense of at all (not just a decode warning/error
   # on an otherwise-recognized structure) - retry a couple of times in case
@@ -23,13 +32,15 @@ class PhotoVariantJob < ApplicationJob
       # thumbnail in the carousel, in place of the :thumb/:full image variants.
       photo.image.preview(resize_to_limit: [ 900, 900 ]).processed
     else
+      reject_if_oversized(photo)
       photo.image.variant(:thumb).processed
       photo.image.variant(:full).processed
       check_for_incomplete_decode(photo)
     end
-  rescue ActiveStorage::InvariableError, ActiveStorage::UnpreviewableError, ActiveStorage::UnrepresentableError => e
-    # A corrupt/truncated upload or an unsupported codec can't be turned into
-    # a variant/preview - leave the photo attached (so the uploader isn't
+  rescue ActiveStorage::InvariableError, ActiveStorage::UnpreviewableError, ActiveStorage::UnrepresentableError, ImageTooLargeError => e
+    # A corrupt/truncated upload, an unsupported codec, or (see
+    # reject_if_oversized) an implausibly huge image can't be turned into a
+    # variant/preview - leave the photo attached (so the uploader isn't
     # silently missing an entry) but don't retry forever; flag it so the
     # uploader gets a visible signal instead of a permanently-broken thumbnail.
     photo.update_columns(processing_failed_at: Time.current, processing_error: PhotoVariantJob.sanitize_error_message(e.message))
@@ -37,18 +48,40 @@ class PhotoVariantJob < ApplicationJob
   end
 
   private
+    # Photo#image's loader runs with unlimited: true, which removes
+    # libvips' own built-in guard against decompression-bomb JPEGs (a small
+    # file claiming implausibly huge dimensions) because that guard was also
+    # rejecting genuine, huge camera-sensor photos as false positives. This
+    # reimposes an explicit limit of our own before any decoding happens, so
+    # dropping libvips' guard doesn't just leave the door open. Only reads
+    # the header (cheap - libvips doesn't decode pixels until something
+    # demands them), so this doesn't itself pay the cost it's guarding
+    # against.
+    def reject_if_oversized(photo)
+      photo.image.blob.open do |file|
+        header = Vips::Image.new_from_file(file.path, access: :sequential)
+        megapixels = header.width.to_f * header.height / 1_000_000.0
+        if megapixels > MAX_MEGAPIXELS
+          raise ImageTooLargeError, "image is #{megapixels.round}MP (#{header.width}x#{header.height}), over the #{MAX_MEGAPIXELS}MP limit"
+        end
+      end
+    end
+
     # fail_on: :none (see Photo#image) means the variants above can succeed
     # having only decoded *part* of the source image, silently - libvips
     # doesn't expose "I stopped early" as a flag on the image it hands back,
     # so the only reliable way to tell a fully-decoded photo from a
     # partially-decoded one is to redo the decode at the strictest fail_on
-    # level and see whether *that* raises. This throwaway re-decode exists
-    # purely to surface that error; its pixels are never used, and its cost
-    # (one extra full decode pass) only applies to photos that already made
-    # it past the real rescue above.
+    # level and see whether *that* raises. unlimited: true carries over here
+    # too - without it, this would flag every oversized-but-legitimate photo
+    # as "incomplete" purely from re-tripping the same guard reject_if_oversized
+    # already made a considered decision about above. This throwaway
+    # re-decode exists purely to surface that error; its pixels are never
+    # used, and its cost (one extra full decode pass) only applies to photos
+    # that already made it past the real rescue above.
     def check_for_incomplete_decode(photo)
       photo.image.blob.open do |file|
-        Vips::Image.new_from_file(file.path, fail_on: :error, access: :sequential).avg
+        Vips::Image.new_from_file(file.path, fail_on: :error, unlimited: true, access: :sequential).avg
       end
     rescue Vips::Error => e
       photo.update_columns(processing_incomplete_at: Time.current, processing_error: PhotoVariantJob.sanitize_error_message(e.message))

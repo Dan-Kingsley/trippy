@@ -12,10 +12,10 @@ class Trip < ApplicationRecord
   has_many :favorites, dependent: :destroy
   has_many :favorited_by, through: :favorites, source: :user
   has_one_attached :cover_photo do |attachable|
-    # See Photo#image for why this is :none rather than :error/:truncated -
-    # Pixel Ultra HDR photos reliably raise a libvips-classified "truncated"
-    # decode condition that isn't actually corruption.
-    attachable.variant :thumb, resize_to_fill: [ 600, 400 ], saver: { quality: 80 }, loader: { fail_on: :none }
+    # See Photo#image for why fail_on: :none, unlimited: true - a real
+    # high-megapixel phone photo (e.g. Pixel 9 Pro) can trip libjpeg's
+    # decompression-bomb guard as a false positive.
+    attachable.variant :thumb, resize_to_fill: [ 600, 400 ], saver: { quality: 80 }, loader: { fail_on: :none, unlimited: true }
   end
 
   validates :title, presence: true

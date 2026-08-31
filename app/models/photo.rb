@@ -7,26 +7,30 @@ class Photo < ApplicationRecord
     # kept small so pages stay snappy. Only the lightbox loads :full.
     # These only apply to image content; videos are previewed instead (see
     # PhotoVariantJob).
-    # fail_on: :none - deliberately the most permissive libvips level. Some
-    # Pixel photos' entropy-coded scan data runs out before every scanline
-    # the file's own header promises has been decoded, which libjpeg reports
-    # as "premature end of JPEG image" - libvips classifies that as
-    # *truncated*, not merely :error, so :truncated (tried first) still
-    # rejected these exactly like :error did. Under :none this no longer
-    # raises - it decodes what it can and leaves the remaining rows
-    # undrawn, which is *also* not fully right (see
-    # PhotoVariantJob#check_for_incomplete_decode for how a resulting
-    # partial image gets flagged rather than passed off as a clean one). A
-    # *dropped/incomplete upload transfer*, the original motivation for
-    # failing loudly here, can no longer reach this code with fewer bytes
-    # than the adventurer actually sent regardless of this setting: direct
-    # upload verifies a checksum against the whole file server-side before
-    # the blob is ever usable (see photo_date_controller.js). What :none
-    # still can't paper over is a file libvips can't make any sense of at
-    # all - PhotoVariantJob's rescue/retry/flag path remains the backstop
+    # fail_on: :none, unlimited: true - confirmed against a real Pixel 9 Pro
+    # photo (6144x8160, ~50MP): the file is completely valid end to end (an
+    # independent decoder reads every row of it fine) - what actually stops
+    # libjpeg partway through, reporting "premature end of JPEG image", is
+    # libjpeg-turbo/libvips' own built-in denial-of-service guard against
+    # decompression bombs, which a real, legitimately huge camera sensor
+    # image is large enough to trip as a false positive. `unlimited: true`
+    # is libvips' documented escape hatch for exactly this ("remove all
+    # denial of service limits"); fail_on: :none is still needed alongside
+    # it since without it libvips would otherwise raise loudly on this same
+    # now-tolerated condition rather than decoding cleanly. Since this
+    # removes a real protection against maliciously crafted tiny-file/huge-
+    # dimension JPEG bombs, PhotoVariantJob re-imposes an explicit megapixel
+    # cap of our own choosing before ever reaching this loader, rather than
+    # trusting libvips' undocumented/miscalibrated internal threshold. A
+    # *dropped/incomplete upload transfer* can't reach this code with fewer
+    # bytes than the adventurer actually sent regardless of these settings:
+    # direct upload verifies a checksum against the whole file server-side
+    # before the blob is ever usable (see photo_date_controller.js). What
+    # this still can't paper over is a file libvips can't make any sense of
+    # at all - PhotoVariantJob's rescue/retry/flag path remains the backstop
     # for that.
-    attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }, loader: { fail_on: :none }
-    attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }, loader: { fail_on: :none }
+    attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }, loader: { fail_on: :none, unlimited: true }
+    attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }, loader: { fail_on: :none, unlimited: true }
   end
 
   validate :acceptable_content_type
