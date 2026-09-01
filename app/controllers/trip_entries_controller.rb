@@ -19,6 +19,7 @@ class TripEntriesController < ApplicationController
     @trip_member = Current.user && @trip.editors.exists?(id: Current.user.id)
     set_adjacent_entries
     record_view!
+    record_read!
   end
 
   def new
@@ -31,6 +32,7 @@ class TripEntriesController < ApplicationController
 
     if @entry.save
       rejected = attach_uploads(@entry)
+      record_read!
       notice = rejected.any? ? nil : t("trip_entries.flashes.entry_added")
       alert = rejected.any? ? t("trip_entries.flashes.entry_added_rejected", count: t("counts.file", count: rejected.size), reasons: rejected.uniq.join("; ")) : nil
       redirect_to trip_path(@trip), notice: notice, alert: alert
@@ -45,6 +47,7 @@ class TripEntriesController < ApplicationController
   def update
     if @entry.update(entry_params)
       rejected = attach_uploads(@entry)
+      record_read!
       notice = rejected.any? ? nil : t("trip_entries.flashes.entry_updated")
       alert = rejected.any? ? t("trip_entries.flashes.entry_updated_rejected", count: t("counts.file", count: rejected.size), reasons: rejected.uniq.join("; ")) : nil
       redirect_to trip_path(@trip), notice: notice, alert: alert
@@ -105,6 +108,20 @@ class TripEntriesController < ApplicationController
 
       attrs = Current.user ? { user: Current.user } : { visitor_token: visitor_token }
       @entry.trip_entry_views.find_or_create_by(attrs)
+    end
+
+    # Unlike record_view!, this runs for every signed-in viewer including the
+    # trip's own owner/collaborators - they're exactly who cares about
+    # knowing when a co-traveler has posted or edited an entry they haven't
+    # caught up on yet (see TripEntry#unread_state). Touches an existing row
+    # rather than leaving its original created_at in place, so re-viewing an
+    # entry always clears staleness introduced by an edit made since the
+    # last visit.
+    def record_read!
+      return unless Current.user
+
+      read = TripEntryRead.find_or_initialize_by(trip_entry: @entry, user: Current.user)
+      read.persisted? ? read.touch : read.save!
     end
 
     def visitor_token

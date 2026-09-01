@@ -55,6 +55,34 @@ module ApplicationHelper
     end
   end
 
+  # A small notification dot marking an entry as unread (solid) or stale -
+  # seen before, but edited since (half-filled, via an SVG arc rather than a
+  # CSS split so it renders as a crisp semicircle at any size). `read` is the
+  # viewer's TripEntryRead for this entry, or nil - see
+  # TripsController#show, which preloads these to avoid an N+1 across a
+  # whole page of entries, and TripEntry#unread_state.
+  def unread_dot_tag(entry, read)
+    return "" unless Current.user
+
+    state = entry.unread_state(read)
+    return "" unless state
+
+    title = t("trips.show.#{state == :unread ? "unread_entry" : "stale_entry"}")
+    fill = "fill-red-600 dark:fill-red-500"
+
+    inner = content_tag(:title, title) +
+      content_tag(:circle, "", cx: 4, cy: 4, r: 3.5, class: "fill-white dark:fill-stone-900")
+
+    inner += if state == :unread
+      content_tag(:circle, "", cx: 4, cy: 4, r: 2.75, class: fill)
+    else
+      content_tag(:path, "", d: "M4 1.25 A2.75 2.75 0 0 1 4 6.75 Z", class: fill) +
+        content_tag(:circle, "", cx: 4, cy: 4, r: 2.75, class: "fill-none stroke-red-600 dark:stroke-red-500", "stroke-width": 0.6)
+    end
+
+    content_tag :svg, inner, viewBox: "0 0 8 8", class: "absolute -top-1.5 -left-1.5 w-3.5 h-3.5 drop-shadow", role: "img"
+  end
+
   # Formats a trip's entry date span, e.g. "12-18 Jan 2026", collapsing to a
   # single date when a trip's entries all happened on the same day.
   def trip_date_range_text(trip)

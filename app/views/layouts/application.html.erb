@@ -32,7 +32,8 @@
     <header class="border-b border-stone-200 dark:border-stone-800 bg-stone-50/90 dark:bg-stone-900/90 backdrop-blur sticky top-0 z-40">
       <div class="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-1.5 sm:gap-4">
         <%= link_to root_path, class: "flex items-center gap-1.5 sm:gap-2 font-bold text-lg sm:text-xl text-amber-800 dark:text-amber-400 shrink-0" do %>
-          <%= image_tag "/trippy-logo.png", alt: "Trippy", class: "h-7 w-7 sm:h-8 sm:w-8 rounded-md dark:invert" %> Trippy
+          <%= image_tag "/trippy-logo.png", alt: "Trippy", class: "h-7 w-7 sm:h-8 sm:w-8 rounded-md dark:hidden" %>
+          <%= image_tag "/trippy-logo-dark.png", alt: "Trippy", class: "h-7 w-7 sm:h-8 sm:w-8 rounded-md hidden dark:block" %> Trippy
         <% end %>
 
         <div class="flex items-center gap-1 sm:gap-3 min-w-0">

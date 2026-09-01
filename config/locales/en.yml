@@ -199,6 +199,8 @@ en:
       hidden_entry_title: "Hidden from non-collaborators"
       add_to_favourites: "Add to favourites"
       remove_from_favourites: "Remove from favourites"
+      unread_entry: "New entry you haven't seen yet"
+      stale_entry: "Edited since you last viewed it"
     flashes:
       private_alert: "This trip is private. Enter its access code to view it."
       created: "Trip created. Start adding entries!"

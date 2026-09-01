@@ -26,6 +26,7 @@ class TripsController < ApplicationController
     )
     @can_add_entries = Current.user&.can_add_entries?(@trip) || false
     @trip_member = Current.user && @trip.editors.exists?(id: Current.user.id)
+    @reads_by_entry_id = Current.user ? TripEntryRead.where(trip_entry_id: @entries.map(&:id), user_id: Current.user.id).index_by(&:trip_entry_id) : {}
   end
 
   def new

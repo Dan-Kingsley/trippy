@@ -171,6 +171,8 @@ de:
       hidden_entry_title: "Für Nicht-Mitwirkende versteckt"
       add_to_favourites: "Zu Favoriten hinzufügen"
       remove_from_favourites: "Aus Favoriten entfernen"
+      unread_entry: "Neuer Eintrag, den du noch nicht gesehen hast"
+      stale_entry: "Bearbeitet, seit du ihn zuletzt angesehen hast"
     flashes:
       private_alert: "Diese Reise ist privat. Gib den Zugangscode ein, um sie anzusehen."
       created: "Reise erstellt. Füge jetzt Einträge hinzu!"

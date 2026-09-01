@@ -134,6 +134,7 @@
           <% else %>
             <div class="w-16 h-16 rounded-lg bg-stone-200 dark:bg-stone-800 flex items-center justify-center">📍</div>
           <% end %>
+          <%= unread_dot_tag entry, @reads_by_entry_id[entry.id] %>
           <div class="absolute -bottom-1.5 -right-1.5 flex -space-x-1.5">
             <% entry.participants.each do |user| %>
               <%= avatar_tag user, size: 32, css_class: "w-5 h-5 text-[8px] ring-2 ring-white dark:ring-stone-900" %>

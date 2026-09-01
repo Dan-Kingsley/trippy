@@ -23,19 +23,21 @@
   --color-stone-800: #343f44;
   --color-stone-900: #2d353b;
 
-  /* Primary accent (links, buttons, focus rings) mapped to Everforest orange
-     - kept distinct from the green family below so success states don't
-     collide with the brand accent. */
-  --color-amber-50: #fdf1e1;
-  --color-amber-100: #faedcd;
-  --color-amber-200: #f5d9ae;
-  --color-amber-300: #f3b88a;
-  --color-amber-400: #e69875;
-  --color-amber-500: #f57d26;
-  --color-amber-600: #f57d26;
-  --color-amber-700: #dd6511;
-  --color-amber-800: #a34e10;
-  --color-amber-900: #4a3626;
+  /* Primary accent (links, buttons, focus rings) mapped to Everforest's
+     signature green - the color most associated with "Everforest" - rather
+     than its orange, which read as a leftover of the old amber theme. The
+     rare success-state green below moves to Everforest aqua so it stays
+     distinguishable from this brand accent. */
+  --color-amber-50: #f3f5df;
+  --color-amber-100: #f0f1d2;
+  --color-amber-200: #dbe2a8;
+  --color-amber-300: #c3d17e;
+  --color-amber-400: #a7c080;
+  --color-amber-500: #8da101;
+  --color-amber-600: #8da101;
+  --color-amber-700: #728301;
+  --color-amber-800: #566301;
+  --color-amber-900: #33421f;
 
   --color-red-50: #fdf0ec;
   --color-red-100: #fde3da;
@@ -48,14 +50,14 @@
   --color-red-800: #a12b28;
   --color-red-900: #514045;
 
-  --color-green-50: #f0f1d2;
-  --color-green-100: #e5e8b8;
-  --color-green-300: #b7c777;
-  --color-green-400: #a7c080;
-  --color-green-500: #8da101;
-  --color-green-600: #8da101;
-  --color-green-700: #728301;
-  --color-green-900: #425047;
+  --color-green-50: #e9f5ef;
+  --color-green-100: #d3ecdf;
+  --color-green-300: #7fcfae;
+  --color-green-400: #83c092;
+  --color-green-500: #35a77c;
+  --color-green-600: #35a77c;
+  --color-green-700: #297f5f;
+  --color-green-900: #1e3a30;
 }
 
 @layer base {

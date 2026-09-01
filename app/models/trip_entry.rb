@@ -9,6 +9,7 @@ class TripEntry < ApplicationRecord
   has_many :comments, dependent: :destroy
   has_many :reactions, dependent: :destroy
   has_many :trip_entry_views, dependent: :destroy
+  has_many :trip_entry_reads, dependent: :destroy
   has_many :trip_entry_collaborators, dependent: :destroy
   has_many :tagged_collaborators, through: :trip_entry_collaborators, source: :user
 
@@ -111,6 +112,17 @@ class TripEntry < ApplicationRecord
   # anyone else tagged as having been there for that part of the trip.
   def participants
     ([ created_by ] + tagged_collaborators).compact.uniq
+  end
+
+  # Whether this entry should show an unread indicator to whoever `read`
+  # (their TripEntryRead row for this entry, or nil) belongs to: :unread if
+  # they've never opened it, :stale if they opened it but it's since been
+  # edited and saved, or nil if they're fully caught up. Takes the read
+  # record rather than a user so callers can preload it (see
+  # TripsController#show) and avoid an N+1 across a whole page of entries.
+  def unread_state(read)
+    return :unread if read.nil?
+    :stale if updated_at > read.updated_at
   end
 
   private
