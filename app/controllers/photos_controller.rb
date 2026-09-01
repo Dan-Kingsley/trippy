@@ -8,9 +8,9 @@ class PhotosController < ApplicationController
   def create
     rejected = attach_uploads(@entry)
 
-    if rejected.positive?
+    if rejected.any?
       redirect_to edit_trip_trip_entry_path(@trip, @entry),
-        alert: t("photos.rejected", count: t("counts.file", count: rejected))
+        alert: t("photos.rejected", count: t("counts.file", count: rejected.size), reasons: rejected.uniq.join("; "))
     else
       redirect_to edit_trip_trip_entry_path(@trip, @entry), notice: t("photos.added")
     end

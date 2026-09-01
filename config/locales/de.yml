@@ -253,9 +253,9 @@ de:
     flashes:
       hidden_alert: "Dieser Eintrag ist versteckt."
       entry_added: "Eintrag hinzugefügt."
-      entry_added_rejected: "Eintrag hinzugefügt, aber %{count} konnten nicht angehängt werden - prüfe, ob es sich um ein unterstütztes Foto-/Videoformat handelt und die Datei vollständig auf dein Gerät heruntergeladen wurde."
+      entry_added_rejected: "Eintrag hinzugefügt, aber %{count} konnten nicht angehängt werden - %{reasons}"
       entry_updated: "Eintrag aktualisiert."
-      entry_updated_rejected: "Eintrag aktualisiert, aber %{count} konnten nicht angehängt werden - prüfe, ob es sich um ein unterstütztes Foto-/Videoformat handelt und die Datei vollständig auf dein Gerät heruntergeladen wurde."
+      entry_updated_rejected: "Eintrag aktualisiert, aber %{count} konnten nicht angehängt werden - %{reasons}"
       entry_deleted: "Eintrag gelöscht."
       not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."
       not_entry_creator: "Du hast keinen Zugriff, um Einträge zu dieser Reise hinzuzufügen."
@@ -318,7 +318,7 @@ de:
     not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."
 
   photos:
-    rejected: "%{count} konnten nicht hinzugefügt werden - prüfe, ob es sich um ein unterstütztes Foto-/Videoformat handelt und die Datei vollständig auf dein Gerät heruntergeladen wurde."
+    rejected: "%{count} konnten nicht hinzugefügt werden - %{reasons}"
     added: "Fotos hinzugefügt."
     removed: "Foto entfernt."
     not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."

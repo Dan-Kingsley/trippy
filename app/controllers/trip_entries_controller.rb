@@ -31,8 +31,8 @@ class TripEntriesController < ApplicationController
 
     if @entry.save
       rejected = attach_uploads(@entry)
-      notice = rejected.positive? ? nil : t("trip_entries.flashes.entry_added")
-      alert = rejected.positive? ? t("trip_entries.flashes.entry_added_rejected", count: t("counts.file", count: rejected)) : nil
+      notice = rejected.any? ? nil : t("trip_entries.flashes.entry_added")
+      alert = rejected.any? ? t("trip_entries.flashes.entry_added_rejected", count: t("counts.file", count: rejected.size), reasons: rejected.uniq.join("; ")) : nil
       redirect_to trip_path(@trip), notice: notice, alert: alert
     else
       render :new, status: :unprocessable_entity
@@ -45,8 +45,8 @@ class TripEntriesController < ApplicationController
   def update
     if @entry.update(entry_params)
       rejected = attach_uploads(@entry)
-      notice = rejected.positive? ? nil : t("trip_entries.flashes.entry_updated")
-      alert = rejected.positive? ? t("trip_entries.flashes.entry_updated_rejected", count: t("counts.file", count: rejected)) : nil
+      notice = rejected.any? ? nil : t("trip_entries.flashes.entry_updated")
+      alert = rejected.any? ? t("trip_entries.flashes.entry_updated_rejected", count: t("counts.file", count: rejected.size), reasons: rejected.uniq.join("; ")) : nil
       redirect_to trip_path(@trip), notice: notice, alert: alert
     else
       render :edit, status: :unprocessable_entity

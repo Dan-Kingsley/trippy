@@ -281,9 +281,9 @@ en:
     flashes:
       hidden_alert: "This entry is hidden."
       entry_added: "Entry added."
-      entry_added_rejected: "Entry added, but %{count} couldn't be attached - check they're a supported photo/video format and fully downloaded on your device."
+      entry_added_rejected: "Entry added, but %{count} couldn't be attached - %{reasons}"
       entry_updated: "Entry updated."
-      entry_updated_rejected: "Entry updated, but %{count} couldn't be attached - check they're a supported photo/video format and fully downloaded on your device."
+      entry_updated_rejected: "Entry updated, but %{count} couldn't be attached - %{reasons}"
       entry_deleted: "Entry deleted."
       not_editor: "You don't have edit access to this trip."
       not_entry_creator: "You don't have access to add entries to this trip."
@@ -346,7 +346,7 @@ en:
     not_editor: "You don't have edit access to this trip."
 
   photos:
-    rejected: "%{count} couldn't be added - check they're a supported photo/video format and fully downloaded on your device."
+    rejected: "%{count} couldn't be added - %{reasons}"
     added: "Photos added."
     removed: "Photo removed."
     not_editor: "You don't have edit access to this trip."
