@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 import L from "leaflet"
 
-const LINE_COLOR = "#b45309"
+const FULL_GROUP_COLOR = "#b45309" // used only when every trip collaborator was present at both ends of a segment
 const LINE_WEIGHT = 3
 const LINE_OPACITY = 0.75
 const CURVE_STEPS_PER_SEGMENT = 24 // vertices sampled along each entry-to-entry great-circle arc
@@ -9,24 +9,62 @@ const ARROW_ARM_LENGTH = LINE_WEIGHT * 4
 const ARROW_HALF_ANGLE_DEGREES = 25
 const BASE_PANE_Z_INDEX = 401 // just above the overlay-pane (400), and below every built-in Leaflet pane
 
+// The traditional artist's RYB color wheel's 6 primary/secondary stops, each
+// given as a pigment-mixing (r, y, b) coordinate rather than a displayed RGB
+// color - see #rybToHex. Adjacent stops are complementary pairs exactly
+// where artists expect them (red/green, yellow/violet, blue/orange).
+const WHEEL_CORNERS = [
+  { r: 1, y: 0, b: 0 }, // red
+  { r: 1, y: 1, b: 0 }, // orange
+  { r: 0, y: 1, b: 0 }, // yellow
+  { r: 0, y: 1, b: 1 }, // green
+  { r: 0, y: 0, b: 1 }, // blue
+  { r: 1, y: 0, b: 1 } // violet
+]
+
+// The 8 corners of the RYB pigment-mixing cube, each mapped to the RGB color
+// it actually looks like - the classic Gossett & Chen "paint mixing" model.
+// Trilinearly interpolating between these (see #rybToHex) is what makes
+// mixed pigment coordinates behave like real paint instead of RGB light
+// (blue+yellow -> green, red+green -> muddy brown, not grey/white).
+const RYB_CUBE_CORNERS = {
+  white: [ 1, 1, 1 ],
+  red: [ 1, 0, 0 ],
+  yellow: [ 1, 1, 0 ],
+  blue: [ 0.163, 0.373, 0.6 ],
+  orange: [ 1, 0.5, 0 ],
+  violet: [ 0.5, 0, 0.5 ],
+  green: [ 0, 0.66, 0.2 ],
+  black: [ 0.2, 0.094, 0 ]
+}
+
 // Renders a Leaflet/OpenStreetMap map with one circular photo marker per
-// located trip entry, connected in chronological order by a translucent
-// great-circle route (curved to follow the Earth's surface rather than
-// cutting a straight line through it) with a directional arrow at the
-// midpoint of each leg. The map's tiles repeat infinitely as the user pans
-// east/west (Leaflet's default), so the markers/route are redrawn on every
-// repeated "world copy" currently in view rather than just the one they
-// were originally placed on - see #renderWorldCopies.
+// located trip entry, connected by great-circle routes (curved to follow the
+// Earth's surface rather than cutting a straight line through it) with a
+// directional arrow at the midpoint of each one. The map's tiles repeat
+// infinitely as the user pans east/west (Leaflet's default), so the
+// markers/route are redrawn on every repeated "world copy" currently in view
+// rather than just the one they were originally placed on - see
+// #renderWorldCopies.
+//
+// Rather than one line per consecutive pair of entries, each trip
+// collaborator gets their own chronological "presence thread" through only
+// the entries they were tagged at - skipping over entries they weren't
+// present for, and reconnecting directly to the next one they were. Where
+// multiple collaborators' threads travel between the same two entries, they
+// share a single rendered line, colored by mixing those collaborators'
+// colors together (or a fixed brown, when the whole trip's collaborator list
+// overlaps) - see #buildSegments.
 //
 // Entries arrive pre-sorted oldest-to-newest. Rather than leaning on
 // Leaflet's default marker stacking (which is based on on-screen pixel
-// position), each entry and each connecting leg gets its own dedicated pane
-// with an explicit z-index, so stacking always reflects chronology instead
-// of screen geometry: later entries render above earlier ones, and each
-// leg's line/arrow renders directly beneath the older of the two entries it
+// position), each entry and each segment gets its own dedicated pane with an
+// explicit z-index, so stacking always reflects chronology instead of screen
+// geometry: later entries render above earlier ones, and each segment's
+// line/arrow renders directly beneath the older (the "from") entry it
 // connects - see #createPanes.
 export default class extends Controller {
-  static values = { entries: Array }
+  static values = { entries: Array, collaboratorIds: Array }
 
   connect() {
     const located = this.entriesValue.filter((e) => e.lat != null && e.lng != null)
@@ -50,7 +88,7 @@ export default class extends Controller {
     // world" and strand the markers on opposite edges of the screen.
     this.entries = located
     this.latLngs = this.unwrapAntimeridian(located.map((e) => [ e.lat, e.lng ]))
-    this.legs = this.buildLegs(this.latLngs)
+    this.segments = this.buildSegments()
     this.createPanes()
     this.worldCopies = new Map()
 
@@ -105,16 +143,16 @@ export default class extends Controller {
   buildWorldCopy(shift) {
     const layer = L.layerGroup()
 
-    this.legs.forEach((leg, i) => {
-      const pane = this.legPaneNames[i]
+    this.segments.forEach((segment, i) => {
+      const pane = this.segmentPaneNames[i]
 
-      if (leg.curve.length > 1) {
-        const shiftedCurve = leg.curve.map(([ lat, lng ]) => [ lat, lng + shift ])
-        L.polyline(shiftedCurve, { color: LINE_COLOR, weight: LINE_WEIGHT, opacity: LINE_OPACITY, pane }).addTo(layer)
+      if (segment.curve.length > 1) {
+        const shiftedCurve = segment.curve.map(([ lat, lng ]) => [ lat, lng + shift ])
+        L.polyline(shiftedCurve, { color: segment.color, weight: LINE_WEIGHT, opacity: LINE_OPACITY, pane }).addTo(layer)
       }
 
-      L.marker([ leg.arrow.lat, leg.arrow.lng + shift ], {
-        icon: this.buildArrowIcon(leg.arrow.bearing),
+      L.marker([ segment.arrow.lat, segment.arrow.lng + shift ], {
+        icon: this.buildArrowIcon(segment.arrow.bearing, segment.color),
         interactive: false,
         keyboard: false,
         pane
@@ -135,22 +173,28 @@ export default class extends Controller {
     return layer
   }
 
-  // One dedicated Leaflet pane per entry and per connecting leg, so stacking
-  // order is driven entirely by explicit z-index rather than Leaflet's
-  // default (on-screen pixel position). Interleaved bottom-to-top as:
-  // leg(0,1), entry 0, leg(1,2), entry 1, leg(2,3), entry 2, ..., entry N-1
-  // - each leg sits directly beneath the older of the two entries it joins,
-  // and every entry outranks every entry before it.
+  // One dedicated Leaflet pane per entry and per segment, so stacking order
+  // is driven entirely by explicit z-index rather than Leaflet's default
+  // (on-screen pixel position). This.segments is sorted by (from, to), so
+  // walking entries in order and, at each one, draining every segment whose
+  // "from" is that entry reproduces the original interleaving - segment(0,1),
+  // entry 0, segment(1,2), entry 1, ... - generalized to handle multiple
+  // segments (or none) sharing the same "from", including ones that skip
+  // ahead to a non-adjacent "to". Each segment sits directly beneath the
+  // older ("from") entry it starts at, and every entry outranks every entry
+  // before it.
   createPanes() {
-    this.legPaneNames = []
+    this.segmentPaneNames = []
     this.entryPaneNames = []
 
     let z = BASE_PANE_Z_INDEX
+    let nextSegment = 0
     this.entries.forEach((_, i) => {
-      if (i < this.legs.length) {
-        const legPane = `trip-map-leg-pane-${i}`
-        this.map.createPane(legPane).style.zIndex = z++
-        this.legPaneNames.push(legPane)
+      while (nextSegment < this.segments.length && this.segments[nextSegment].from === i) {
+        const segmentPane = `trip-map-segment-pane-${nextSegment}`
+        this.map.createPane(segmentPane).style.zIndex = z++
+        this.segmentPaneNames.push(segmentPane)
+        nextSegment++
       }
 
       const entryPane = `trip-map-entry-pane-${i}`
@@ -164,7 +208,7 @@ export default class extends Controller {
   // rotated in CSS to point along the direction of travel. Sized in screen
   // pixels via divIcon, so - like the route's stroke-width - it stays the
   // same visual size regardless of zoom level.
-  buildArrowIcon(bearingDegrees) {
+  buildArrowIcon(bearingDegrees, color) {
     const angle = (ARROW_HALF_ANGLE_DEGREES * Math.PI) / 180
     const dx = ARROW_ARM_LENGTH * Math.sin(angle)
     const dy = ARROW_ARM_LENGTH * Math.cos(angle)
@@ -175,40 +219,124 @@ export default class extends Controller {
       html: `<svg width="${half * 2}" height="${half * 2}" viewBox="${-half} ${-half} ${half * 2} ${half * 2}"
                   style="transform: rotate(${bearingDegrees}deg)">
                <line x1="0" y1="0" x2="${dx.toFixed(2)}" y2="${dy.toFixed(2)}"
-                     stroke="${LINE_COLOR}" stroke-opacity="${LINE_OPACITY}" stroke-width="${LINE_WEIGHT}" stroke-linecap="round" />
+                     stroke="${color}" stroke-opacity="${LINE_OPACITY}" stroke-width="${LINE_WEIGHT}" stroke-linecap="round" />
                <line x1="0" y1="0" x2="${(-dx).toFixed(2)}" y2="${dy.toFixed(2)}"
-                     stroke="${LINE_COLOR}" stroke-opacity="${LINE_OPACITY}" stroke-width="${LINE_WEIGHT}" stroke-linecap="round" />
+                     stroke="${color}" stroke-opacity="${LINE_OPACITY}" stroke-width="${LINE_WEIGHT}" stroke-linecap="round" />
              </svg>`,
       iconSize: [ half * 2, half * 2 ],
       iconAnchor: [ half, half ]
     })
   }
 
-  // One entry per consecutive pair of entries, each carrying its own
-  // great-circle curve (so it can be drawn as its own polyline, in its own
-  // pane) plus a directional arrow placed exactly on that curve at its
-  // midpoint (t=0.5 along #slerp, which is also one of the vertices
-  // #buildCurve samples - so it can't drift off the rendered line the way a
-  // plain lat/lng average could) and rotated to the route's tangent bearing
-  // there, pointing from the older entry toward the newer one.
-  buildLegs(latLngs) {
-    const legs = []
-    for (let i = 1; i < latLngs.length; i++) {
-      const p1 = latLngs[i - 1]
-      const p2 = latLngs[i]
-      const [ lat, lng ] = this.slerp(p1, p2, 0.5)
+  // Every trip collaborator (owner first, then the rest in the stable order
+  // the server sent) walks their own chronological "presence thread" -
+  // just the located entries they were tagged at, skipping any they weren't
+  // - and each consecutive pair along that thread is a candidate segment.
+  // Candidate segments sharing the same (from, to) entries - because two or
+  // more collaborators' threads both happen to hop between the same pair -
+  // are merged into a single rendered segment, colored by mixing every
+  // contributing collaborator's color together (see #segmentColor). Sorted
+  // by (from, to) so #createPanes can walk it in lockstep with the entries.
+  buildSegments() {
+    const total = this.collaboratorIdsValue.length
+    const coordinates = new Map(this.collaboratorIdsValue.map((id, i) => [ id, this.wheelCoordinate(i, total) ]))
 
-      // The tangent direction at the midpoint, approximated from two points
-      // just either side of it - a great circle's bearing changes along its
-      // length (except along the equator/a meridian), so the leg's start
-      // bearing isn't generally the same as its midpoint bearing.
-      const before = this.slerp(p1, p2, 0.49)
-      const after = this.slerp(p1, p2, 0.51)
-      const bearing = this.bearingBetween(before[0], before[1], after[0], after[1])
+    const grouped = new Map()
+    this.collaboratorIdsValue.forEach((id) => {
+      const path = []
+      this.entries.forEach((entry, i) => {
+        if (entry.participant_ids?.includes(id)) path.push(i)
+      })
 
-      legs.push({ curve: this.buildCurve([ p1, p2 ]), arrow: { lat, lng, bearing } })
+      for (let t = 1; t < path.length; t++) {
+        const from = path[t - 1]
+        const to = path[t]
+        const key = `${from}-${to}`
+        if (!grouped.has(key)) grouped.set(key, { from, to, contributors: new Set() })
+        grouped.get(key).contributors.add(id)
+      }
+    })
+
+    return [ ...grouped.values() ]
+      .sort((a, b) => a.from - b.from || a.to - b.to)
+      .map(({ from, to, contributors }) => this.buildSegment(from, to, [ ...contributors ], total, coordinates))
+  }
+
+  // A single segment's geometry (curve + midpoint arrow, exactly as legs
+  // were built previously - #buildCurve/#slerp/#bearingBetween don't care
+  // whether "from" and "to" are adjacent entries or a multi-entry skip) plus
+  // its color: the fixed brown constant when every one of the trip's
+  // collaborators contributed to this segment, otherwise the RYB mix of just
+  // the contributors' colors (a "mix" of one collaborator is just their own
+  // color, so lone contributors fall out of the same formula for free).
+  buildSegment(from, to, contributorIds, total, coordinates) {
+    const p1 = this.latLngs[from]
+    const p2 = this.latLngs[to]
+    const [ lat, lng ] = this.slerp(p1, p2, 0.5)
+
+    // The tangent direction at the midpoint, approximated from two points
+    // just either side of it - a great circle's bearing changes along its
+    // length (except along the equator/a meridian), so a segment's start
+    // bearing isn't generally the same as its midpoint bearing.
+    const before = this.slerp(p1, p2, 0.49)
+    const after = this.slerp(p1, p2, 0.51)
+    const bearing = this.bearingBetween(before[0], before[1], after[0], after[1])
+
+    const color = contributorIds.length === total
+      ? FULL_GROUP_COLOR
+      : this.rybToHex(this.mixRyb(contributorIds.map((id) => coordinates.get(id))))
+
+    return { from, to, color, curve: this.buildCurve([ p1, p2 ]), arrow: { lat, lng, bearing } }
+  }
+
+  // The collaborator at `index` of `total`'s position on the 6-stop RYB
+  // wheel, spaced evenly around it (`index * 6 / total`). Landing exactly on
+  // a corner when 6/total is a whole number (e.g. total=2 -> red & green,
+  // total=3 -> red, yellow & blue - the RYB primary triad); otherwise
+  // interpolated between the two nearest corners.
+  wheelCoordinate(index, total) {
+    const position = (index * WHEEL_CORNERS.length) / total
+    const lower = Math.floor(position) % WHEEL_CORNERS.length
+    const upper = (lower + 1) % WHEEL_CORNERS.length
+    const frac = position - Math.floor(position)
+
+    const a = WHEEL_CORNERS[lower]
+    const b = WHEEL_CORNERS[upper]
+    return {
+      r: a.r + (b.r - a.r) * frac,
+      y: a.y + (b.y - a.y) * frac,
+      b: a.b + (b.b - a.b) * frac
     }
-    return legs
+  }
+
+  // Mixing pigments = averaging their (r, y, b) mixing coordinates (not
+  // their displayed RGB colors), the same way a paint-mixing simulator
+  // would - see #rybToHex for why that produces realistic blends.
+  mixRyb(coordinates) {
+    const sum = coordinates.reduce((acc, c) => ({ r: acc.r + c.r, y: acc.y + c.y, b: acc.b + c.b }), { r: 0, y: 0, b: 0 })
+    const n = coordinates.length
+    return { r: sum.r / n, y: sum.y / n, b: sum.b / n }
+  }
+
+  // Converts an (r, y, b) pigment-mixing coordinate to a displayable hex
+  // color via trilinear interpolation between the 8 corners of the RYB cube
+  // (see RYB_CUBE_CORNERS) - the standard way to render/mix colors in RYB
+  // pigment space rather than RGB light space.
+  rybToHex({ r, y, b }) {
+    const { white, red, yellow, blue, orange, violet, green, black } = RYB_CUBE_CORNERS
+
+    const channel = (i) =>
+      (1 - r) * (1 - y) * (1 - b) * white[i] +
+      r * (1 - y) * (1 - b) * red[i] +
+      (1 - r) * y * (1 - b) * yellow[i] +
+      (1 - r) * (1 - y) * b * blue[i] +
+      r * y * (1 - b) * orange[i] +
+      r * (1 - y) * b * violet[i] +
+      (1 - r) * y * b * green[i] +
+      r * y * b * black[i]
+
+    const toHex = (v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0")
+    return `#${toHex(channel(0))}${toHex(channel(1))}${toHex(channel(2))}`
   }
 
   // Samples an entry-to-entry leg as a great-circle arc (via #slerp) rather

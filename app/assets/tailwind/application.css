@@ -5,6 +5,57 @@
 
 @theme {
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Everforest (medium contrast) reskin. Every bg-/text-/border-/ring- utility
+     in the app is built from these four families, and always pairs a low
+     shade for light mode with a high shade behind dark: for dark mode - so
+     redefining the hex values here recolors the whole UI without touching
+     any view. Low shades come from Everforest's light palette, high shades
+     from its dark palette. Source: https://github.com/sainnhe/everforest */
+  --color-stone-50: #fdf6e3;
+  --color-stone-100: #f4f0d9;
+  --color-stone-200: #e6e2cc;
+  --color-stone-300: #e0dcc7;
+  --color-stone-400: #bdc3af;
+  --color-stone-500: #a6b0a0;
+  --color-stone-600: #5c6a72;
+  --color-stone-700: #475258;
+  --color-stone-800: #343f44;
+  --color-stone-900: #2d353b;
+
+  /* Primary accent (links, buttons, focus rings) mapped to Everforest orange
+     - kept distinct from the green family below so success states don't
+     collide with the brand accent. */
+  --color-amber-50: #fdf1e1;
+  --color-amber-100: #faedcd;
+  --color-amber-200: #f5d9ae;
+  --color-amber-300: #f3b88a;
+  --color-amber-400: #e69875;
+  --color-amber-500: #f57d26;
+  --color-amber-600: #f57d26;
+  --color-amber-700: #dd6511;
+  --color-amber-800: #a34e10;
+  --color-amber-900: #4a3626;
+
+  --color-red-50: #fdf0ec;
+  --color-red-100: #fde3da;
+  --color-red-200: #fac3b8;
+  --color-red-300: #f4948f;
+  --color-red-400: #e67e80;
+  --color-red-500: #f85552;
+  --color-red-600: #f85552;
+  --color-red-700: #e23b37;
+  --color-red-800: #a12b28;
+  --color-red-900: #514045;
+
+  --color-green-50: #f0f1d2;
+  --color-green-100: #e5e8b8;
+  --color-green-300: #b7c777;
+  --color-green-400: #a7c080;
+  --color-green-500: #8da101;
+  --color-green-600: #8da101;
+  --color-green-700: #728301;
+  --color-green-900: #425047;
 }
 
 @layer base {

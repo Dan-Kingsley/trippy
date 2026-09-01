@@ -33,7 +33,8 @@
       "Bash(node -e \"console.log\\('n/a'\\)\")",
       "Bash(ruby -e ' *)",
       "Bash(ruby *)",
-      "Bash(awk '{print $NF, $5}')"
+      "Bash(awk '{print $NF, $5}')",
+      "Bash(xargs -I{} basename {})"
     ]
   }
 }

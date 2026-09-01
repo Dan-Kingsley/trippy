@@ -41,6 +41,13 @@ class Trip < ApplicationRecord
     User.where(id: [ owner_id, *collaborator_ids ])
   end
 
+  # Like editors, but stably ordered (owner first, then collaborators in the
+  # order they joined) rather than however User.where happens to return rows -
+  # the map uses this order to assign each collaborator a consistent color.
+  def ordered_editors
+    [ owner, *trip_collaborators.includes(:user).order(:created_at).map(&:user) ]
+  end
+
   def favorited_by?(user)
     user && favorites.exists?(user_id: user.id)
   end
