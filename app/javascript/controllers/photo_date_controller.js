@@ -172,7 +172,7 @@ export default class extends Controller {
   // backstop for the plain-multipart fallback and anyone bypassing this JS.
   async attemptUpload(file, row) {
     if (!(await this.looksCompleteJpeg(file))) {
-      this.finishUpload("Incomplete file: last two bytes aren't the JPEG end-of-image marker (FF D9) - it may not have fully downloaded before upload", null, file, row)
+      this.finishUpload("Incomplete file: ran off the end of the file while scanning for the JPEG's end-of-image marker - it may not have fully downloaded before upload", null, file, row)
       return
     }
 
@@ -188,15 +188,55 @@ export default class extends Controller {
     upload.create((error, blob) => this.finishUpload(error, blob, file, row))
   }
 
-  // A JPEG stream always ends with an FFD9 (End Of Image) marker - a file
-  // missing that in its last two bytes was cut short somewhere upstream.
-  // Only meaningful for JPEG; other formats have their own container
-  // structure, so they're passed through unchecked.
+  // Whether the file decodes to a real FFD9 (End Of Image) marker before
+  // running off the end of the buffer. Deliberately doesn't just check the
+  // file's last two bytes - lots of complete, valid phone photos have data
+  // *after* their real EOI on purpose (Android "Motion Photo" appends an MP4
+  // clip; MPO/dual-camera files append a second whole JPEG), so that would
+  // flag plenty of genuine, undamaged uploads as incomplete. Instead this
+  // walks the marker structure to the entropy-coded scan data and scans
+  // byte-by-byte from there respecting JPEG's escaping rules (a literal
+  // 0xFF byte in scan data is always followed by 0x00; 0xFF followed by a
+  // restart marker D0-D7 is a mid-scan checkpoint, not the end) - the same
+  // thing a real decoder does, just without decoding any pixels. Only
+  // meaningful for JPEG; other formats have their own container structure.
   async looksCompleteJpeg(file) {
-    if (file.type !== "image/jpeg" || file.size < 2) return true
+    if (file.type !== "image/jpeg") return true
 
-    const tail = new Uint8Array(await file.slice(-2).arrayBuffer())
-    return tail[0] === 0xff && tail[1] === 0xd9
+    const view = new DataView(await file.arrayBuffer())
+    const length = view.byteLength
+    if (length < 4 || view.getUint16(0) !== 0xffd8) return true // not a JPEG we can parse - let the server decide
+
+    let i = 2
+    while (i + 1 < length) {
+      if (view.getUint8(i) !== 0xff) return false // expected a marker here - stream doesn't parse as JPEG
+
+      const marker = view.getUint8(i + 1)
+      if (marker === 0xd9) return true // EOI found before running off the end
+      if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+        i += 2 // standalone marker with no payload (TEM, lone RSTn)
+        continue
+      }
+      if (marker !== 0xda) {
+        if (i + 4 > length) return false
+        i += 2 + view.getUint16(i + 2) // skip this segment's declared payload
+        continue
+      }
+
+      // SOS: skip its header, then scan the entropy-coded data byte by byte
+      // until the next real marker (respecting the escaping rules above).
+      i += 2 + view.getUint16(i + 2)
+      while (i + 1 < length) {
+        if (view.getUint8(i) === 0xff) {
+          const next = view.getUint8(i + 1)
+          if (next !== 0x00 && !(next >= 0xd0 && next <= 0xd7)) break
+          i += 2
+        } else {
+          i += 1
+        }
+      }
+    }
+    return false // ran off the end of the file without ever finding an EOI
   }
 
   finishUpload(error, blob, file, row) {

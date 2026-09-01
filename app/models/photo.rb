@@ -71,22 +71,30 @@ class Photo < ApplicationRecord
       errors.add(:image, :invalid_content_type)
     end
 
-    # A JPEG stream always ends with an FFD9 (End Of Image) marker - a file
-    # missing that in its last two bytes was cut short somewhere between the
-    # camera/photo library and here (see Photo#image's comment on why the
-    # direct-upload checksum can't catch this). Checking those two bytes is
-    # enough to catch it and reject the upload synchronously, before
-    # PhotoVariantJob ever gets a chance to quietly bake the missing tail
-    # into a persisted :thumb/:full variant. Scoped to JPEG since that's the
-    # only format here with such a simple, fixed trailer to check - PNG/WebP/
-    # HEIC would each need their own container-specific check.
+    # A truncated JPEG can't reliably be spotted by checking whether the
+    # file's last two bytes are the FFD9 End Of Image marker - lots of real,
+    # complete phone photos have data *after* their real EOI on purpose:
+    # Android "Motion Photo"/Samsung "Motion Photo" appends an MP4 clip past
+    # the JPEG's end, and MPO (dual-camera) files append a second whole
+    # JPEG. Checking only the last two bytes flags all of those as
+    # incomplete even though they open and display fine. Instead, actually
+    # decode the image the same way PhotoVariantJob's variants will - with
+    # fail_on: :truncated, which fails exactly when the decoder runs out of
+    # real bytes before reaching *its own* EOI, and is unaffected by
+    # whatever bytes follow that. unlimited: true carries over for the same
+    # reason it does on Photo#image's variants (see that comment) - without
+    # it, a real huge-but-complete photo could rack up libjpeg's own
+    # unrelated "too many warnings" cutoff and get misdiagnosed as
+    # incomplete here too.
     def acceptable_jpeg_completeness
       return unless image.attached?
       return unless image.content_type == "image/jpeg"
-      return if image.byte_size.to_i < 2
 
-      trailer = image.download_chunk((image.byte_size - 2)...image.byte_size)
-      errors.add(:image, :incomplete_upload) unless trailer == "\xFF\xD9".b
+      image.blob.open do |file|
+        Vips::Image.new_from_file(file.path, fail_on: :truncated, unlimited: true, access: :sequential).avg
+      end
+    rescue Vips::Error
+      errors.add(:image, :incomplete_upload)
     end
 
     def extract_exif_later
