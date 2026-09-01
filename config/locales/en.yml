@@ -424,7 +424,6 @@ en:
           attributes:
             image:
               invalid_content_type: "must be a supported photo or video format"
-              incomplete_upload: "couldn't be fully processed (%{detail}) - this can happen if a cloud photo library hasn't fully downloaded it yet, or if the file itself is unusual/corrupt"
         reaction:
           attributes:
             emoji:

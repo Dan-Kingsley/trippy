@@ -32,7 +32,8 @@
       "Bash(vipsheader huge_black_q10.jpg)",
       "Bash(node -e \"console.log\\('n/a'\\)\")",
       "Bash(ruby -e ' *)",
-      "Bash(ruby *)"
+      "Bash(ruby *)",
+      "Bash(awk '{print $NF, $5}')"
     ]
   }
 }

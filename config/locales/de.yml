@@ -398,7 +398,6 @@ de:
           attributes:
             image:
               invalid_content_type: "muss ein unterstütztes Foto- oder Videoformat sein"
-              incomplete_upload: "konnte nicht vollständig verarbeitet werden (%{detail}) - das kann passieren, wenn ein Cloud-Fotodienst die Datei noch nicht vollständig heruntergeladen hat, oder wenn die Datei selbst ungewöhnlich/beschädigt ist"
         reaction:
           attributes:
             emoji:

@@ -164,18 +164,17 @@ export default class extends Controller {
   // same DirectUpload flow into an already-failed row.
   //
   // Deliberately doesn't try to pre-validate the file is a complete JPEG
-  // client-side before uploading it (a cloud photo library like iCloud/
-  // Google Photos "optimise storage" can hand the browser a not-yet-fully-
-  // downloaded original, which direct upload's checksum can't catch - it
-  // only verifies the bytes actually sent arrived intact, not that they were
-  // the whole file to begin with). A hand-rolled JS byte-scanner tried that
-  // here previously and twice mis-flagged real, complete photos as
-  // incomplete because it couldn't fully replicate every JPEG structural
-  // quirk (trailing Motion Photo/MPO data, encoder-specific padding, etc.).
-  // Photo#acceptable_jpeg_completeness runs the real production decoder
-  // server-side instead, which can't have that class of bug - the tradeoff
-  // is a genuinely truncated file now fails right after upload finishes
-  // rather than before it starts, instead of failing fast but unreliably.
+  // client-side before uploading it - a hand-rolled JS byte-scanner tried
+  // that here previously and repeatedly mis-flagged real, complete photos as
+  // incomplete (trailing Motion Photo/MPO data, encoder-specific padding,
+  // etc. all tripped it up in different ways). A synchronous server-side
+  // real-decode check was tried next and also dropped, since it raced
+  // PhotoVariantJob's own decodes under Solid Queue's in-Puma threads (see
+  // Photo#image's comment) and produced the exact same false positives on
+  // otherwise-fine uploads. Following the same photo-app-at-scale precedent
+  // Photo#image's comment cites: never block an upload on this - accept it,
+  // and let PhotoVariantJob's async check flag it after the fact if it
+  // really was incomplete.
   attemptUpload(file, row) {
     const upload = new DirectUpload(file, this.directUploadUrlValue, {
       directUploadWillStoreFileWithXHR: (xhr) => {

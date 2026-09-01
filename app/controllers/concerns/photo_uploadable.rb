@@ -5,11 +5,9 @@ module PhotoUploadable
     # Attaches every selected file (the plain multipart fallback) and direct
     # upload signed ID (the normal JS-driven path) to the entry as a new
     # Photo, in the order they were selected. Returns the validation error
-    # message for each rejected upload (e.g. unsupported content type, or
-    # Photo#acceptable_jpeg_completeness's real-decode check failing) rather
-    # than just a count, so the caller can tell the adventurer *why* -
-    # otherwise a rejection is a dead end with no way to tell a genuinely
-    # incomplete file apart from some other rare failure mode.
+    # message for each rejected upload (currently just an unsupported
+    # content type) rather than just a count, so the caller can tell the
+    # adventurer *why* instead of a rejection being an unexplained dead end.
     def attach_uploads(entry)
       uploads = Array(params[:photos]) + Array(params[:photo_signed_ids])
       rejection_reasons = []

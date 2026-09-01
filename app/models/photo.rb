@@ -23,26 +23,27 @@ class Photo < ApplicationRecord
     # cap of our own choosing before ever reaching this loader, rather than
     # trusting libvips' undocumented/miscalibrated internal threshold.
     #
-    # A dropped network transfer can't reach this code with fewer bytes than
-    # the adventurer's browser actually sent - direct upload verifies a
-    # checksum against the whole file server-side before the blob is ever
-    # usable (see photo_date_controller.js). But that checksum is computed
-    # from whatever bytes the browser itself read off the source file, so it
-    # can't catch a source file that was already incomplete before the
-    # browser ever touched it - e.g. a cloud photo library (iCloud/Google
-    # Photos "optimise storage") handing over a not-yet-fully-downloaded
-    # original. That's a genuinely truncated JPEG, not a false-positive guard
-    # trip, and no loader option here can recover data that was never
-    # uploaded - acceptable_jpeg_completeness below rejects it synchronously,
-    # up front, rather than letting fail_on: :none quietly bake a
-    # partial/blank-bottomed image into the :thumb/:full variants for
-    # PhotoVariantJob's check_for_incomplete_decode to only notice later.
+    # A genuinely truncated/corrupt upload can't be reliably told apart from
+    # a fine one synchronously at upload time - a real-decode check was tried
+    # here and repeatedly produced false positives of its own (see git log
+    # for the saga), and running it synchronously in the request thread turns
+    # out to race PhotoVariantJob's own decodes running on Solid Queue's
+    # in-Puma worker threads (see config/puma.rb's SOLID_QUEUE_IN_PUMA),
+    # since libvips' error-message buffer is a process-global static, not
+    # thread-local. Immich (a much larger, more battle-tested photo app built
+    # on the same sharp/libvips foundation) doesn't attempt this either -
+    # their strict decode only runs at thumbnail time, after the upload is
+    # already accepted, and a failure there is just logged, not surfaced as a
+    # rejected upload. Following that precedent: never reject an upload for
+    # looking incomplete - accept it, and let PhotoVariantJob's
+    # check_for_incomplete_decode flag it after the fact (processing_failed?/
+    # processing_incomplete?, surfaced via the warning badge on the edit page
+    # and carousel) rather than trying to definitively rule on it up front.
     attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }, loader: { fail_on: :none, unlimited: true }
     attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }, loader: { fail_on: :none, unlimited: true }
   end
 
   validate :acceptable_content_type
-  validate :acceptable_jpeg_completeness
 
   after_create_commit :extract_exif_later
   after_create_commit :prewarm_variants_later
@@ -69,43 +70,6 @@ class Photo < ApplicationRecord
       return if image.content_type.in?(MediaContentTypes::ALL)
 
       errors.add(:image, :invalid_content_type)
-    end
-
-    # A truncated JPEG can't reliably be spotted by checking whether the
-    # file's last two bytes are the FFD9 End Of Image marker - lots of real,
-    # complete phone photos have data *after* their real EOI on purpose:
-    # Android "Motion Photo"/Samsung "Motion Photo" appends an MP4 clip past
-    # the JPEG's end, and MPO (dual-camera) files append a second whole
-    # JPEG. Checking only the last two bytes flags all of those as
-    # incomplete even though they open and display fine. Instead, actually
-    # decode the image the same way PhotoVariantJob's variants will - with
-    # fail_on: :truncated, which fails exactly when the decoder runs out of
-    # real bytes before reaching *its own* EOI, and is unaffected by
-    # whatever bytes follow that. unlimited: true carries over for the same
-    # reason it does on Photo#image's variants (see that comment) - without
-    # it, a real huge-but-complete photo could rack up libjpeg's own
-    # unrelated "too many warnings" cutoff and get misdiagnosed as
-    # incomplete here too.
-    #
-    # fail_on: :truncated only actually *gates* libvips' "ran out of bytes
-    # mid-read" case - but libjpeg still raises unconditionally, regardless
-    # of fail_on, for other hard failures (an unsupported JPEG variant, a
-    # corrupt-but-not-truncated segment, etc.), and those land in this same
-    # rescue. So this can't safely claim every rejection here is a truncated
-    # upload - the message includes libvips' own real reason (sanitized the
-    # same way PhotoVariantJob does) so a rejection that's actually something
-    # else is distinguishable and diagnosable, rather than every failure
-    # getting mislabelled as "not fully downloaded".
-    def acceptable_jpeg_completeness
-      return unless image.attached?
-      return unless image.content_type == "image/jpeg"
-
-      image.blob.open do |file|
-        Vips::Image.new_from_file(file.path, fail_on: :truncated, unlimited: true, access: :sequential).avg
-      end
-    rescue Vips::Error => e
-      Rails.logger.warn("Photo: rejecting unprocessable JPEG upload: #{e.message}")
-      errors.add(:image, :incomplete_upload, detail: PhotoVariantJob.sanitize_error_message(e.message))
     end
 
     def extract_exif_later
