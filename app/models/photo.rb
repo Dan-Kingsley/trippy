@@ -86,6 +86,16 @@ class Photo < ApplicationRecord
     # it, a real huge-but-complete photo could rack up libjpeg's own
     # unrelated "too many warnings" cutoff and get misdiagnosed as
     # incomplete here too.
+    #
+    # fail_on: :truncated only actually *gates* libvips' "ran out of bytes
+    # mid-read" case - but libjpeg still raises unconditionally, regardless
+    # of fail_on, for other hard failures (an unsupported JPEG variant, a
+    # corrupt-but-not-truncated segment, etc.), and those land in this same
+    # rescue. So this can't safely claim every rejection here is a truncated
+    # upload - the message includes libvips' own real reason (sanitized the
+    # same way PhotoVariantJob does) so a rejection that's actually something
+    # else is distinguishable and diagnosable, rather than every failure
+    # getting mislabelled as "not fully downloaded".
     def acceptable_jpeg_completeness
       return unless image.attached?
       return unless image.content_type == "image/jpeg"
@@ -93,8 +103,9 @@ class Photo < ApplicationRecord
       image.blob.open do |file|
         Vips::Image.new_from_file(file.path, fail_on: :truncated, unlimited: true, access: :sequential).avg
       end
-    rescue Vips::Error
-      errors.add(:image, :incomplete_upload)
+    rescue Vips::Error => e
+      Rails.logger.warn("Photo: rejecting unprocessable JPEG upload: #{e.message}")
+      errors.add(:image, :incomplete_upload, detail: PhotoVariantJob.sanitize_error_message(e.message))
     end
 
     def extract_exif_later
