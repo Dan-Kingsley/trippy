@@ -368,7 +368,6 @@ en:
       upload_failed: "%{filename} — upload failed (%{reason})"
       upload_failed_reason:
         network: "connection interrupted — this can happen with large files on a slow connection, try again"
-        incomplete: "file looks incomplete — often a cloud photo library hasn't fully downloaded it yet, try again once it has"
         generic: "please try again"
       copy_error: "Copy error details"
       error_copied: "Copied!"

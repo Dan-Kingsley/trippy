@@ -30,7 +30,9 @@
       "Bash(sqlite3 *)",
       "Bash(vips black *)",
       "Bash(vipsheader huge_black_q10.jpg)",
-      "Bash(node -e \"console.log\\('n/a'\\)\")"
+      "Bash(node -e \"console.log\\('n/a'\\)\")",
+      "Bash(ruby -e ' *)",
+      "Bash(ruby *)"
     ]
   }
 }

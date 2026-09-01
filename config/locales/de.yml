@@ -340,7 +340,6 @@ de:
       upload_failed: "%{filename} — Upload fehlgeschlagen (%{reason})"
       upload_failed_reason:
         network: "Verbindung unterbrochen — das kann bei großen Dateien mit langsamer Verbindung passieren, bitte erneut versuchen"
-        incomplete: "Datei scheint unvollständig zu sein — oft hat eine Cloud-Fotomediathek sie noch nicht vollständig heruntergeladen, bitte erneut versuchen, sobald sie es hat"
         generic: "bitte erneut versuchen"
       copy_error: "Fehlerdetails kopieren"
       error_copied: "Kopiert!"
