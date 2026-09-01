@@ -80,6 +80,15 @@ class PhotoVariantJob < ApplicationJob
     # used, and its cost (one extra full decode pass) only applies to photos
     # that already made it past the real rescue above.
     def check_for_incomplete_decode(photo)
+      # The :thumb/:full decodes above run with fail_on: :none, so any
+      # warnings libvips logged for them (e.g. the same "premature end of
+      # JPEG file" this re-decode is about to check for) are still sitting in
+      # libvips' error buffer - it's only ever drained when a Vips::Error is
+      # actually raised/constructed. Left alone, this decode's own error
+      # would be built from that stale backlog plus its own warning, showing
+      # the same line duplicated once per earlier decode that hit it. Clearing
+      # first ensures the message below reflects only this decode.
+      Vips.vips_error_clear
       photo.image.blob.open do |file|
         Vips::Image.new_from_file(file.path, fail_on: :error, unlimited: true, access: :sequential).avg
       end

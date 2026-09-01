@@ -21,19 +21,28 @@ class Photo < ApplicationRecord
     # removes a real protection against maliciously crafted tiny-file/huge-
     # dimension JPEG bombs, PhotoVariantJob re-imposes an explicit megapixel
     # cap of our own choosing before ever reaching this loader, rather than
-    # trusting libvips' undocumented/miscalibrated internal threshold. A
-    # *dropped/incomplete upload transfer* can't reach this code with fewer
-    # bytes than the adventurer actually sent regardless of these settings:
-    # direct upload verifies a checksum against the whole file server-side
-    # before the blob is ever usable (see photo_date_controller.js). What
-    # this still can't paper over is a file libvips can't make any sense of
-    # at all - PhotoVariantJob's rescue/retry/flag path remains the backstop
-    # for that.
+    # trusting libvips' undocumented/miscalibrated internal threshold.
+    #
+    # A dropped network transfer can't reach this code with fewer bytes than
+    # the adventurer's browser actually sent - direct upload verifies a
+    # checksum against the whole file server-side before the blob is ever
+    # usable (see photo_date_controller.js). But that checksum is computed
+    # from whatever bytes the browser itself read off the source file, so it
+    # can't catch a source file that was already incomplete before the
+    # browser ever touched it - e.g. a cloud photo library (iCloud/Google
+    # Photos "optimise storage") handing over a not-yet-fully-downloaded
+    # original. That's a genuinely truncated JPEG, not a false-positive guard
+    # trip, and no loader option here can recover data that was never
+    # uploaded - acceptable_jpeg_completeness below rejects it synchronously,
+    # up front, rather than letting fail_on: :none quietly bake a
+    # partial/blank-bottomed image into the :thumb/:full variants for
+    # PhotoVariantJob's check_for_incomplete_decode to only notice later.
     attachable.variant :thumb, resize_to_limit: [ 900, 900 ], saver: { quality: 75 }, loader: { fail_on: :none, unlimited: true }
     attachable.variant :full, resize_to_limit: [ 3000, 3000 ], saver: { quality: 90 }, loader: { fail_on: :none, unlimited: true }
   end
 
   validate :acceptable_content_type
+  validate :acceptable_jpeg_completeness
 
   after_create_commit :extract_exif_later
   after_create_commit :prewarm_variants_later
@@ -60,6 +69,24 @@ class Photo < ApplicationRecord
       return if image.content_type.in?(MediaContentTypes::ALL)
 
       errors.add(:image, :invalid_content_type)
+    end
+
+    # A JPEG stream always ends with an FFD9 (End Of Image) marker - a file
+    # missing that in its last two bytes was cut short somewhere between the
+    # camera/photo library and here (see Photo#image's comment on why the
+    # direct-upload checksum can't catch this). Checking those two bytes is
+    # enough to catch it and reject the upload synchronously, before
+    # PhotoVariantJob ever gets a chance to quietly bake the missing tail
+    # into a persisted :thumb/:full variant. Scoped to JPEG since that's the
+    # only format here with such a simple, fixed trailer to check - PNG/WebP/
+    # HEIC would each need their own container-specific check.
+    def acceptable_jpeg_completeness
+      return unless image.attached?
+      return unless image.content_type == "image/jpeg"
+      return if image.byte_size.to_i < 2
+
+      trailer = image.download_chunk((image.byte_size - 2)...image.byte_size)
+      errors.add(:image, :incomplete_upload) unless trailer == "\xFF\xD9".b
     end
 
     def extract_exif_later

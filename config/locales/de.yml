@@ -253,9 +253,9 @@ de:
     flashes:
       hidden_alert: "Dieser Eintrag ist versteckt."
       entry_added: "Eintrag hinzugefügt."
-      entry_added_rejected: "Eintrag hinzugefügt, aber %{count} konnten nicht angehängt werden - nur Foto- und Videodateien werden unterstützt."
+      entry_added_rejected: "Eintrag hinzugefügt, aber %{count} konnten nicht angehängt werden - prüfe, ob es sich um ein unterstütztes Foto-/Videoformat handelt und die Datei vollständig auf dein Gerät heruntergeladen wurde."
       entry_updated: "Eintrag aktualisiert."
-      entry_updated_rejected: "Eintrag aktualisiert, aber %{count} konnten nicht angehängt werden - nur Foto- und Videodateien werden unterstützt."
+      entry_updated_rejected: "Eintrag aktualisiert, aber %{count} konnten nicht angehängt werden - prüfe, ob es sich um ein unterstütztes Foto-/Videoformat handelt und die Datei vollständig auf dein Gerät heruntergeladen wurde."
       entry_deleted: "Eintrag gelöscht."
       not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."
       not_entry_creator: "Du hast keinen Zugriff, um Einträge zu dieser Reise hinzuzufügen."
@@ -318,7 +318,7 @@ de:
     not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."
 
   photos:
-    rejected: "%{count} konnten nicht hinzugefügt werden - nur Foto- und Videodateien werden unterstützt."
+    rejected: "%{count} konnten nicht hinzugefügt werden - prüfe, ob es sich um ein unterstütztes Foto-/Videoformat handelt und die Datei vollständig auf dein Gerät heruntergeladen wurde."
     added: "Fotos hinzugefügt."
     removed: "Foto entfernt."
     not_editor: "Du hast keinen Bearbeitungszugriff auf diese Reise."
@@ -340,6 +340,7 @@ de:
       upload_failed: "%{filename} — Upload fehlgeschlagen (%{reason})"
       upload_failed_reason:
         network: "Verbindung unterbrochen — das kann bei großen Dateien mit langsamer Verbindung passieren, bitte erneut versuchen"
+        incomplete: "Datei scheint unvollständig zu sein — oft hat eine Cloud-Fotomediathek sie noch nicht vollständig heruntergeladen, bitte erneut versuchen, sobald sie es hat"
         generic: "bitte erneut versuchen"
       copy_error: "Fehlerdetails kopieren"
       error_copied: "Kopiert!"
@@ -398,6 +399,7 @@ de:
           attributes:
             image:
               invalid_content_type: "muss ein unterstütztes Foto- oder Videoformat sein"
+              incomplete_upload: "scheint unvollständig zu sein (oft, weil ein Cloud-Fotodienst es noch nicht vollständig heruntergeladen hat) - versuche es erneut, sobald es vollständig auf deinem Gerät heruntergeladen ist"
         reaction:
           attributes:
             emoji:

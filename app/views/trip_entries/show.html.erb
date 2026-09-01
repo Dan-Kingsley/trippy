@@ -31,13 +31,15 @@
                     data: { attachment_fallback: true, fallback_class: "w-full h-full object-contain",
                             fallback_content: "🎬" } %>
               <%= video_play_icon(size: "w-14 h-14 text-2xl") %>
+              <%= render "trip_entries/processing_badge", photo: photo, position: "top-2 left-2" if @editable %>
             </div>
           <% else %>
-            <div class="snap-center shrink-0 w-full aspect-[4/3] sm:aspect-[16/9] cursor-zoom-in"
+            <div class="snap-center shrink-0 w-full aspect-[4/3] sm:aspect-[16/9] relative cursor-zoom-in"
                  data-action="click->carousel#open" data-kind="image" data-full-src="<%= url_for(photo.image.variant(:full)) %>">
               <%= image_tag photo.image.variant(:thumb),
                     class: "w-full h-full object-contain",
                     data: { attachment_fallback: true, fallback_class: "w-full h-full object-contain" } %>
+              <%= render "trip_entries/processing_badge", photo: photo, position: "top-2 left-2" if @editable %>
             </div>
           <% end %>
         <% end %>

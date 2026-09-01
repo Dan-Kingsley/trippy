@@ -12,19 +12,7 @@
       <% @entry.photos.each do |photo| %>
         <div data-reorder-target="item" data-url="<%= trip_trip_entry_photo_path(@trip, @entry, photo) %>" class="relative cursor-move">
           <%= photo_thumb_tag photo, size: 96, css_class: "w-24 h-24 rounded-lg object-cover border border-stone-200 dark:border-stone-800" %>
-          <% if photo.processing_failed? || photo.processing_incomplete? %>
-            <div class="absolute -top-2 -left-2" data-controller="clipboard"
-                 data-clipboard-copied-text-value="<%= t("trip_entries.edit.processing_error_copied") %>">
-              <textarea data-clipboard-target="source" class="hidden" readonly tabindex="-1"><%= [
-                  "File: #{photo.image.filename}",
-                  "Error: #{photo.processing_error.presence || "unknown"}",
-                  "Time: #{(photo.processing_failed_at || photo.processing_incomplete_at)&.iso8601}"
-                ].join("\n") %></textarea>
-              <button type="button" data-action="clipboard#copy" data-clipboard-target="button"
-                title="<%= photo.processing_failed? ? t("trip_entries.edit.processing_failed_title") : t("trip_entries.edit.processing_incomplete_title") %>"
-                class="w-6 h-6 rounded-full bg-amber-500 text-white text-sm leading-none flex items-center justify-center cursor-pointer">⚠</button>
-            </div>
-          <% end %>
+          <%= render "trip_entries/processing_badge", photo: photo %>
           <%= button_to "&times;".html_safe, trip_trip_entry_photo_path(@trip, @entry, photo), method: :delete,
                 form: { data: { turbo_confirm: t("trip_entries.edit.remove_photo_confirm") } },
                 class: "absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 hover:bg-red-500 text-white text-sm leading-none cursor-pointer" %>

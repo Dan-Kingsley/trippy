@@ -1,0 +1,14 @@
+<% position ||= "-top-2 -left-2" %>
+<% if photo.processing_failed? || photo.processing_incomplete? %>
+  <div class="absolute <%= position %> z-10" data-controller="clipboard"
+       data-clipboard-copied-text-value="<%= t("trip_entries.edit.processing_error_copied") %>">
+    <textarea data-clipboard-target="source" class="hidden" readonly tabindex="-1"><%= [
+        "File: #{photo.image.filename}",
+        "Error: #{photo.processing_error.presence || "unknown"}",
+        "Time: #{(photo.processing_failed_at || photo.processing_incomplete_at)&.iso8601}"
+      ].join("\n") %></textarea>
+    <button type="button" data-action="click->clipboard#copy:stop" data-clipboard-target="button"
+      title="<%= photo.processing_failed? ? t("trip_entries.edit.processing_failed_title") : t("trip_entries.edit.processing_incomplete_title") %>"
+      class="w-6 h-6 rounded-full bg-amber-500 text-white text-sm leading-none flex items-center justify-center cursor-pointer">⚠</button>
+  </div>
+<% end %>

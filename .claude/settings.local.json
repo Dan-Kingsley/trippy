@@ -12,7 +12,25 @@
       "WebSearch",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(node -e \"console.log\\('raw pixels \\(uncompressed\\):', 6144*8160*3, 'bytes ~=', \\(6144*8160*3/1024/1024\\).toFixed\\(1\\), 'MB'\\)\")",
-      "Bash(node -e \"console.log\\(28046719 - 3371 - 12\\)\")"
+      "Bash(node -e \"console.log\\(28046719 - 3371 - 12\\)\")",
+      "Bash(python3 -c \"import PIL\")",
+      "Bash(node -e ' *)",
+      "Bash(find / -path /proc -prune -o -type d -name \"exif-2.2.4\" -print)",
+      "Bash(gem env *)",
+      "Bash(git config *)",
+      "Bash(gem contents *)",
+      "Bash(curl *)",
+      "Bash(python3 -c \"import pyvips\")",
+      "Bash(dpkg -l)",
+      "Bash(xxd '/trippy/exampleimage.jpg/IMG9Pro_28082026_071944941.📸 Leica.jpg')",
+      "Bash(apt-get -v)",
+      "Bash(vipsheader '/trippy/exampleimage.jpg/IMG9Pro_28082026_071944941.📸 Leica.jpg')",
+      "Bash(vips avg *)",
+      "Bash(vips copy *)",
+      "Bash(sqlite3 *)",
+      "Bash(vips black *)",
+      "Bash(vipsheader huge_black_q10.jpg)",
+      "Bash(node -e \"console.log\\('n/a'\\)\")"
     ]
   }
 }

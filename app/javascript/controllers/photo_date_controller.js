@@ -162,7 +162,20 @@ export default class extends Controller {
   // reshuffle or duplicate the list when the adventurer retries just the
   // failures - only pulled out of uploadFile so retryUpload can drive the
   // same DirectUpload flow into an already-failed row.
-  attemptUpload(file, row) {
+  //
+  // Checks the file itself is a complete JPEG before spending any bandwidth
+  // on it - a cloud photo library (iCloud/Google Photos "optimise storage")
+  // can hand the browser a not-yet-fully-downloaded original, which direct
+  // upload's checksum can't catch (it only verifies the bytes actually sent
+  // arrived intact, not that they were the whole file to begin with). Server
+  // still re-checks this (see Photo#acceptable_jpeg_completeness) as a
+  // backstop for the plain-multipart fallback and anyone bypassing this JS.
+  async attemptUpload(file, row) {
+    if (!(await this.looksCompleteJpeg(file))) {
+      this.finishUpload("Incomplete file: last two bytes aren't the JPEG end-of-image marker (FF D9) - it may not have fully downloaded before upload", null, file, row)
+      return
+    }
+
     const upload = new DirectUpload(file, this.directUploadUrlValue, {
       directUploadWillStoreFileWithXHR: (xhr) => {
         xhr.upload.addEventListener("progress", (event) => {
@@ -172,40 +185,53 @@ export default class extends Controller {
       }
     })
 
-    upload.create((error, blob) => {
-      if (error) {
-        this.failedRows.add(row)
-        row.bar.classList.replace("bg-amber-600", "bg-red-600")
-        row.label.textContent = this.interpolate(this.translationsValue.upload_failed, { filename: file.name, reason: this.uploadFailureReason(error) })
-        row.label.title = error
-        row.copy.classList.remove("hidden")
-        row.retry.classList.remove("hidden")
-        row.copy.onclick = () => this.copyErrorDetails(row.copy, file, error)
-        row.retry.onclick = () => this.retryUpload(file, row)
-      } else {
-        // DirectUpload only calls back without an error once the server has
-        // verified the uploaded bytes' checksum, so the full file is
-        // confirmed intact by this point - safe to show the success tick.
-        this.failedRows.delete(row)
-        row.bar.style.width = "100%"
-        row.bar.classList.remove("bg-amber-600", "bg-red-600")
-        row.bar.classList.add("bg-green-600")
-        row.check.classList.remove("hidden")
-        row.copy.classList.add("hidden")
-        row.retry.classList.add("hidden")
-        const hidden = document.createElement("input")
-        hidden.type = "hidden"
-        hidden.name = "photo_signed_ids[]"
-        hidden.value = blob.signed_id
-        this.element.appendChild(hidden)
-      }
+    upload.create((error, blob) => this.finishUpload(error, blob, file, row))
+  }
 
-      this.pendingUploads = Math.max(0, this.pendingUploads - 1)
-      if (this.pendingUploads === 0) {
-        this.setSubmitDisabled(false)
-        if (this.autoSubmitValue && this.failedRows.size === 0) this.element.requestSubmit()
-      }
-    })
+  // A JPEG stream always ends with an FFD9 (End Of Image) marker - a file
+  // missing that in its last two bytes was cut short somewhere upstream.
+  // Only meaningful for JPEG; other formats have their own container
+  // structure, so they're passed through unchecked.
+  async looksCompleteJpeg(file) {
+    if (file.type !== "image/jpeg" || file.size < 2) return true
+
+    const tail = new Uint8Array(await file.slice(-2).arrayBuffer())
+    return tail[0] === 0xff && tail[1] === 0xd9
+  }
+
+  finishUpload(error, blob, file, row) {
+    if (error) {
+      this.failedRows.add(row)
+      row.bar.classList.replace("bg-amber-600", "bg-red-600")
+      row.label.textContent = this.interpolate(this.translationsValue.upload_failed, { filename: file.name, reason: this.uploadFailureReason(error) })
+      row.label.title = error
+      row.copy.classList.remove("hidden")
+      row.retry.classList.remove("hidden")
+      row.copy.onclick = () => this.copyErrorDetails(row.copy, file, error)
+      row.retry.onclick = () => this.retryUpload(file, row)
+    } else {
+      // DirectUpload only calls back without an error once the server has
+      // verified the uploaded bytes' checksum, so the full file is
+      // confirmed intact by this point - safe to show the success tick.
+      this.failedRows.delete(row)
+      row.bar.style.width = "100%"
+      row.bar.classList.remove("bg-amber-600", "bg-red-600")
+      row.bar.classList.add("bg-green-600")
+      row.check.classList.remove("hidden")
+      row.copy.classList.add("hidden")
+      row.retry.classList.add("hidden")
+      const hidden = document.createElement("input")
+      hidden.type = "hidden"
+      hidden.name = "photo_signed_ids[]"
+      hidden.value = blob.signed_id
+      this.element.appendChild(hidden)
+    }
+
+    this.pendingUploads = Math.max(0, this.pendingUploads - 1)
+    if (this.pendingUploads === 0) {
+      this.setSubmitDisabled(false)
+      if (this.autoSubmitValue && this.failedRows.size === 0) this.element.requestSubmit()
+    }
   }
 
   retryUpload(file, row) {
@@ -276,6 +302,7 @@ export default class extends Controller {
   // friendlier headline for the common cases.
   uploadFailureReason(error) {
     const t = this.translationsValue.upload_failed_reason
+    if (error.startsWith("Incomplete file:")) return t.incomplete
     const status = Number(error.match(/Status: (\d+)/)?.[1])
     return status === 0 ? t.network : t.generic
   }
