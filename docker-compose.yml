@@ -7,13 +7,34 @@ services:
     environment:
       RAILS_ENV: production
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      SOLID_QUEUE_IN_PUMA: "true"
       RAILS_LOG_LEVEL: ${RAILS_LOG_LEVEL:-info}
     volumes:
       - trippy_storage:/rails/storage
     restart: unless-stopped
     networks:
       - reverse-proxy
+
+  # Solid Queue as its own process/container rather than SOLID_QUEUE_IN_PUMA
+  # running it as threads inside the web container - PhotoVariantJob and
+  # ExifExtractionJob do CPU/memory-heavy libvips decodes on whatever thread
+  # picks them up, and sharing a process with Puma meant that work could
+  # stall or otherwise interfere with web requests actively streaming a
+  # different upload's bytes at the same time (see git log - a stop-the-
+  # world GC pause here once corrupted a concurrent upload in exactly this
+  # way). Same image, same storage volume (Solid Queue's own sqlite db and
+  # the actual photo/video blobs it processes both live there), just a
+  # separate OS process so heavy job work can't touch web request handling.
+  trippy-worker:
+    container_name: trippy-worker
+    build: .
+    command: ./bin/jobs
+    environment:
+      RAILS_ENV: production
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_LOG_LEVEL: ${RAILS_LOG_LEVEL:-info}
+    volumes:
+      - trippy_storage:/rails/storage
+    restart: unless-stopped
 
 volumes:
   trippy_storage:

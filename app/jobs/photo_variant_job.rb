@@ -45,20 +45,6 @@ class PhotoVariantJob < ApplicationJob
     # uploader gets a visible signal instead of a permanently-broken thumbnail.
     photo.update_columns(processing_failed_at: Time.current, processing_error: PhotoVariantJob.sanitize_error_message(e.message))
     Rails.logger.warn("PhotoVariantJob: could not process photo #{photo_id}: #{e.message}")
-  ensure
-    # Each Vips::Image wrapper here holds native memory (and, once a decode
-    # exceeds VIPS_DISC_THRESHOLD - true for every one of these ~150MB
-    # raw-pixel 50MP photos - a disk-backed temp file) that's only released
-    # when Ruby's GC finalizes the wrapper object. Solid Queue's workers run
-    # as long-lived threads inside the same Puma process (see
-    # config/puma.rb's SOLID_QUEUE_IN_PUMA), so if GC lags behind how fast
-    # this job creates large native objects, those temp files/native
-    # allocations can accumulate across many uploads over days of uptime
-    # rather than being freed promptly - a resource leak in a process that's
-    # never expected to restart on its own. Forcing a collection here trades
-    # a bit of job latency for keeping that accumulation bounded to what a
-    # single job run needs, rather than trusting incidental GC timing.
-    GC.start
   end
 
   private

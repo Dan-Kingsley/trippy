@@ -21,12 +21,6 @@ class ExifExtractionJob < ApplicationJob
     photo.save! if photo.changed?
   ensure
     photo&.trip_entry&.recompute_from_photos!
-    # extract_gps_with_vips holds a native Vips::Image (and, for large
-    # photos, a disk-backed temp file) that only gets released once Ruby's
-    # GC finalizes it - see PhotoVariantJob's ensure block for why that
-    # matters in a long-lived Solid Queue worker thread. This job runs on
-    # every non-video upload, so it's worth the same treatment.
-    GC.start
   end
 
   private
