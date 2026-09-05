@@ -53,5 +53,17 @@ module Trippy
     # matters on patchy mobile connections) and no more possibility of that
     # redirect's short-lived URL expiring before the browser follows it.
     config.active_storage.resolve_model_to_route = :rails_storage_proxy
+
+    # Direct upload's signed PUT URL (the one photo_date_controller.js's
+    # DirectUpload actually streams the file bytes to) has its own separate
+    # expiry from the above, defaulting to just 5 minutes - comfortably
+    # enough for a fast connection, but a single ~20-25MB camera photo on a
+    # slow/patchy mobile connection can take longer than that to actually
+    # transfer, and the browser has no way to know the URL expired mid-PUT -
+    # it just gets back a 404 (Rails' default response for an invalid/expired
+    # signed token) with no indication that a retry with a fresh URL would
+    # succeed. Matches the same slow-mobile-upload reasoning HTTP_READ_TIMEOUT
+    # was raised for in the Dockerfile, just for this separate timeout.
+    config.active_storage.service_urls_expire_in = 1.hour
   end
 end
